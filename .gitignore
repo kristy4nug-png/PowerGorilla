@@ -1,0 +1,55 @@
+# PowerShell Gorilla — Git Ignore
+
+# ─── Large data files (stay local, processed by Ollama into Supabase) ───
+PowerGorilla/data/imports/*.csv
+PowerGorilla/data/imports/*.CSV
+*.csv
+*.CSV
+
+# ─── Processed/generated local data (rebuilt by PowerShell) ───
+PowerGorilla/data/processed/
+PowerGorilla/data/icons/*.png
+PowerGorilla/data/icons/*.ico
+PowerGorilla/logs/
+PowerGorilla/backups/
+PowerGorilla/reports/
+logs/
+backups/
+reports/
+
+# ─── Secrets and env files ───
+.env
+.env.local
+.env.*.local
+*.env
+supabase/.env
+gorilla-app/.env
+gorilla-app/.env.local
+
+# ─── Node / Expo ───
+node_modules/
+gorilla-app/node_modules/
+gorilla-app/.expo/
+gorilla-app/dist/
+gorilla-app/web-build/
+gorilla-app/.cache/
+gorilla-app/expo-env.d.ts
+
+# ─── Windows ───
+Thumbs.db
+Desktop.ini
+*.lnk
+
+# ─── PowerShell ───
+*.pssproj
+*.suo
+.vs/
+
+# ─── Editor ───
+.vscode/settings.json
+.idea/
+*.swp
+*~
+
+# ─── OS ───
+.DS_Store

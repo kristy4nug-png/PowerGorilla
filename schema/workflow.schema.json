@@ -1,0 +1,43 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "gorilla/workflow/v1",
+  "title": "PowerShell Gorilla Workflow Record",
+  "type": "object",
+  "required": ["id", "workflowName", "appNames", "combinationSize"],
+  "additionalProperties": false,
+  "properties": {
+    "id":                   { "type": "string" },
+    "workflowName":         { "type": "string" },
+    "description":          { "type": "string", "default": "" },
+    "category":             { "type": "string", "default": "Unknown" },
+    "appNames":             {
+      "type": "array",
+      "items": { "type": "string" },
+      "minItems": 2,
+      "maxItems": 4,
+      "description": "Ordered list of app names in this combination"
+    },
+    "combinationSize":      { "type": "integer", "minimum": 2, "maximum": 4 },
+    "difficulty":           {
+      "type": "string",
+      "enum": ["Easy", "Medium", "Hard", "Unknown"],
+      "default": "Unknown"
+    },
+    "riskLevel":            {
+      "type": "string",
+      "enum": ["Low", "Medium", "High"],
+      "default": "Low"
+    },
+    "automationReadiness":  { "type": "string", "default": "Unknown" },
+    "freeOpenSourceStatus": { "type": "string", "default": "Unknown" },
+    "rankScore":            { "type": "number", "minimum": 0, "maximum": 100, "default": 50 },
+    "signInRequirement":    { "type": "string", "default": "Unknown" },
+    "powerShellPlan":       {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Ordered PowerShell plan steps for this workflow"
+    },
+    "ollamaEnriched":       { "type": "boolean", "default": false },
+    "embeddingModel":       { "type": ["string", "null"], "default": null }
+  }
+}

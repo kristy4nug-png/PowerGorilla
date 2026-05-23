@@ -1,0 +1,232 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Power Gorilla</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="appShell">
+    <aside class="sideNav" aria-label="Power Gorilla sections">
+      <div class="brandBlock">
+        <div class="brandMark">PG</div>
+        <div>
+          <h1>Power Gorilla</h1>
+          <span id="safeMode">Strict Safe Mode</span>
+        </div>
+      </div>
+      <nav>
+        <a href="#home">Home</a>
+        <a href="#inventory">App Inventory</a>
+        <a href="#integrations">App Integrations</a>
+        <a href="#builder">Workflow Builder</a>
+        <a href="#updater">Computer Updater</a>
+        <a href="#fixer">Computer Fixer</a>
+        <a href="#security">Security / Risk</a>
+        <a href="#signin">Sign-In Status</a>
+        <a href="#logs">Logs / Reports</a>
+        <a href="#settings">Settings</a>
+      </nav>
+    </aside>
+
+    <main>
+      <header class="topBar">
+        <div>
+          <span class="eyebrow">Local Windows command centre</span>
+          <h2>App combinations, safe previews, and read-only system intelligence</h2>
+        </div>
+        <div class="topActions">
+          <button class="btn secondary" id="refreshBtn" type="button">Refresh Data</button>
+          <button class="btn primary" id="exportStateBtn" type="button">Export State</button>
+        </div>
+      </header>
+
+      <section id="home" class="section">
+        <div class="sectionHead">
+          <div>
+            <h3>Home</h3>
+            <p id="stateStamp">Preparing local state</p>
+          </div>
+          <div class="progressWrap" aria-live="polite">
+            <span id="progressLabel">Ready</span>
+            <div class="progressTrack"><div id="progressBar" class="progressBar"></div></div>
+          </div>
+        </div>
+        <div class="metricGrid" id="metricGrid"></div>
+      </section>
+
+      <section id="inventory" class="section">
+        <div class="sectionHead">
+          <div>
+            <h3>App Inventory</h3>
+            <p>Detected apps, imported app candidates, local status, and icon cache state.</p>
+          </div>
+          <button class="btn secondary" id="exportInventoryBtn" type="button">Export Inventory</button>
+        </div>
+        <div class="toolbar">
+          <input id="appSearch" class="input" type="search" placeholder="Search app name">
+          <select id="categoryFilter" class="input"></select>
+          <label class="check"><input id="installedOnly" type="checkbox"> Installed only</label>
+          <label class="check"><input id="openSourceOnly" type="checkbox"> Open-source</label>
+          <label class="check"><input id="freeOnly" type="checkbox"> Free/free-tier</label>
+          <label class="check"><input id="localOnly" type="checkbox"> Local mode</label>
+        </div>
+        <div id="appGrid" class="appGrid"></div>
+      </section>
+
+      <section id="integrations" class="section">
+        <div class="sectionHead">
+          <div>
+            <h3>App Integrations</h3>
+            <p>Visual app-icon combinations from the imported workflow datasets.</p>
+          </div>
+          <div class="segmented" role="group" aria-label="Combination size">
+            <button type="button" data-size="2" class="active">2 Apps</button>
+            <button type="button" data-size="3">3 Apps</button>
+            <button type="button" data-size="4">4 Apps</button>
+          </div>
+        </div>
+
+        <div class="builderLayout">
+          <div class="builderPanel">
+            <div class="canvasHead">
+              <h4>Workflow Canvas</h4>
+              <button class="btn secondary small" id="clearSelectionBtn" type="button">Clear</button>
+            </div>
+            <div id="slotCanvas" class="slotCanvas"></div>
+            <div id="equationPreview" class="equationPreview"></div>
+            <div class="actionStrip">
+              <button class="btn primary" id="previewPlanBtn" type="button">Preview Plan</button>
+              <button class="btn secondary" id="exportPlanBtn" type="button">Export Plan</button>
+              <button class="btn secondary" id="favouriteBtn" type="button">Add to Favourites</button>
+              <button class="btn secondary" id="launchPreviewBtn" type="button">Launch Apps</button>
+              <button class="btn secondary" id="generatePlanBtn" type="button">Generate PowerShell Plan</button>
+            </div>
+          </div>
+
+          <div class="resultPanel">
+            <h4>Best Match</h4>
+            <div id="bestMatch"></div>
+            <h4>Smart Suggestions</h4>
+            <div id="suggestionGrid" class="suggestionGrid"></div>
+          </div>
+        </div>
+
+        <div class="toolbar">
+          <input id="workflowSearch" class="input" type="search" placeholder="Search workflows">
+          <select id="workflowTypeFilter" class="input">
+            <option value="">All workflow types</option>
+            <option value="fix">Computer fixer</option>
+            <option value="update">Updater</option>
+            <option value="creative">Creative</option>
+            <option value="automation">Automation-ready</option>
+            <option value="powerful">Powerful</option>
+            <option value="easy">Easy</option>
+          </select>
+        </div>
+        <div id="integrationCards" class="cardGrid"></div>
+      </section>
+
+      <section id="builder" class="section">
+        <div class="sectionHead">
+          <div>
+            <h3>Workflow Builder</h3>
+            <p>Goal-first recommendations from the imported 2-app, 3-app, and 4-app datasets.</p>
+          </div>
+        </div>
+        <div class="toolbar">
+          <select id="goalSelect" class="input">
+            <option value="fix computer">Fix computer</option>
+            <option value="update apps">Update apps</option>
+            <option value="organise files">Organise files</option>
+            <option value="clean music">Clean music</option>
+            <option value="build content">Build content</option>
+            <option value="create images">Create images</option>
+            <option value="manage launchers">Manage launchers</option>
+            <option value="diagnose system">Diagnose system</option>
+            <option value="automate project">Automate project</option>
+          </select>
+          <button class="btn primary" id="goalBtn" type="button">Recommend</button>
+        </div>
+        <div id="goalResults" class="cardGrid"></div>
+      </section>
+
+      <section id="updater" class="section twoColumn">
+        <div>
+          <h3>Computer Updater</h3>
+          <p>Scan-only phase. Update execution is disabled until confirmation workflows are added.</p>
+          <button class="btn primary" data-preview-command="CheckWingetUpdates" type="button">Preview winget Update Scan</button>
+        </div>
+        <div id="updaterPanel" class="statusPanel"></div>
+      </section>
+
+      <section id="fixer" class="section twoColumn">
+        <div>
+          <h3>Computer Fixer</h3>
+          <p>Safe diagnostics only. DISM/SFC and cleanup routines remain behind explicit confirmation gates.</p>
+          <button class="btn primary" data-preview-command="CheckDiskHealth" type="button">Preview Disk Health Scan</button>
+        </div>
+        <div id="fixerPanel" class="statusPanel"></div>
+      </section>
+
+      <section id="security" class="section">
+        <div class="sectionHead">
+          <div>
+            <h3>Security / Risk Review</h3>
+            <p>Preview-first controls, credential-safe logs, and blocked destructive actions.</p>
+          </div>
+        </div>
+        <div id="riskPanel" class="cardGrid"></div>
+      </section>
+
+      <section id="signin" class="section">
+        <div class="sectionHead">
+          <div>
+            <h3>Sign-In Status</h3>
+            <p>Local mode remains available where possible. Power Gorilla does not collect passwords.</p>
+          </div>
+          <button class="btn secondary" id="exportSigninBtn" type="button">Export Sign-In Report</button>
+        </div>
+        <div id="signinTable" class="tableWrap"></div>
+      </section>
+
+      <section id="logs" class="section">
+        <div class="sectionHead">
+          <div>
+            <h3>Logs / Reports</h3>
+            <p>Exports and favourites are saved locally under PowerGorilla reports and data folders.</p>
+          </div>
+        </div>
+        <div id="reportsPanel" class="statusPanel"></div>
+      </section>
+
+      <section id="settings" class="section">
+        <div class="sectionHead">
+          <div>
+            <h3>Settings</h3>
+            <p>Strict Safe Mode is enabled. Admin and experimental modes are disabled.</p>
+          </div>
+        </div>
+        <div id="settingsPanel" class="statusPanel"></div>
+      </section>
+    </main>
+  </div>
+
+  <dialog id="planDialog">
+    <form method="dialog">
+      <div class="dialogHead">
+        <h3 id="dialogTitle">Safe Preview</h3>
+        <button class="iconBtn" value="cancel" aria-label="Close" type="submit">X</button>
+      </div>
+      <pre id="dialogBody"></pre>
+      <div class="dialogActions">
+        <button class="btn primary" value="ok" type="submit">Done</button>
+      </div>
+    </form>
+  </dialog>
+
+  <script src="app-data.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

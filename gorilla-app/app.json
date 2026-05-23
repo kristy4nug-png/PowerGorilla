@@ -1,0 +1,29 @@
+{
+  "expo": {
+    "name": "PowerShell Gorilla",
+    "slug": "powershell-gorrilla",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "scheme": "gorilla",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "dark",
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#0a0e1a"
+    },
+    "assetBundlePatterns": ["**/*"],
+    "web": {
+      "bundler": "metro",
+      "output": "static",
+      "favicon": "./assets/favicon.png"
+    },
+    "platforms": ["web"],
+    "plugins": [
+      "expo-router"
+    ],
+    "experiments": {
+      "typedRoutes": true
+    }
+  }
+}
