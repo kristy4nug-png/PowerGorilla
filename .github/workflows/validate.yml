@@ -17,7 +17,7 @@ jobs:
       - name: Run validation
         shell: pwsh
         run: |
-          pwsh -NoProfile -Command "Set-StrictMode -Version 2.0; .\scripts\Validate-PowerGorilla.ps1 -RefreshData -ExtractIcons | Out-Null"
+          pwsh -NoProfile -Command "Set-StrictMode -Version 2.0; .\PowerGorilla\scripts\Validate-PowerGorilla.ps1 -RefreshData -ExtractIcons | Out-Null"
 
       - name: Upload validation report
         if: always()
