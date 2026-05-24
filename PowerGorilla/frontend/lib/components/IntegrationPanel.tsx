@@ -216,7 +216,7 @@ export default function IntegrationPanel({
     return (
       <IntegrationCard
         app={app}
-        iconData={iconCache[app.icon_id || '']}
+        iconData={iconCache[app.icon_id || ''] ?? undefined}
         onEdit={onEditApp}
         onRemove={onRemoveApp}
         onPin={onPinApp}
@@ -478,7 +478,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   loadingOverlay: {
-    ...StyleSheet.absoluteFillObject,
+    ...StyleSheet.absoluteFill,
     backgroundColor: 'rgba(0, 0, 0, 0.3)',
     justifyContent: 'center',
     alignItems: 'center',

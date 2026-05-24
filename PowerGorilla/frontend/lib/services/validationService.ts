@@ -32,6 +32,9 @@ export interface IntegrationHealthReport {
   recommendations: string[];
 }
 
+type ValidationCheck = ValidationResult['checks'][number];
+type ValidationSummary = ValidationResult['summary'];
+
 /**
  * Validate JSON command structure
  */
@@ -277,7 +280,7 @@ export async function checkIntegrationHealth(
  * Run comprehensive system validation
  */
 export async function runSystemValidation(): Promise<ValidationResult> {
-  const checks = [];
+  const checks: ValidationCheck[] = [];
   const startTime = new Date();
 
   // Check 1: Supabase connectivity
@@ -374,7 +377,7 @@ export async function runSystemValidation(): Promise<ValidationResult> {
   });
 
   // Summarize
-  const summary = {
+  const summary: ValidationSummary = {
     totalChecks: checks.length,
     passed: checks.filter((c) => c.status === 'pass').length,
     failed: checks.filter((c) => c.status === 'fail').length,

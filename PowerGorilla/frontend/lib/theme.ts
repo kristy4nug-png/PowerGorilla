@@ -6,6 +6,7 @@ export const Colors = {
   panel2:   '#1a2236',
   border:   '#1e2d45',
   text:     '#e2eaf6',
+  textSecondary: '#8899b4',
   muted:    '#8899b4',
   ok:       '#34d399',
   warn:     '#fbbf24',
