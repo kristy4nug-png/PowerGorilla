@@ -1,38 +1,110 @@
 name: Validate PowerGorilla
 
 on:
-  push:
-    branches: [ master ]
   pull_request:
-    branches: [ master ]
+  push:
+    branches:
+      - master
 
 jobs:
   validate:
     runs-on: windows-latest
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # PowerShell is already available as pwsh on the Windows runner.
       - name: Run validation
         shell: pwsh
         run: |
-          $StatePath = ".\PowerGorilla\data\processed\dashboard-state.json"
-          $StateDir = Split-Path -Parent $StatePath
-          New-Item -ItemType Directory -Force -Path $StateDir | Out-Null
-          if (-not (Test-Path -LiteralPath $StatePath)) {
-            @{
-              generatedAt = (Get-Date).ToString("o")
-              source = "github-actions-ci"
-              apps = @()
-              integrations = @()
-              commands = @()
-              icons = @()
-              categories = @()
-              warnings = @("CI created a safe empty dashboard-state.json because generated local data is not committed.")
-            } | ConvertTo-Json -Depth 10 | Set-Content -LiteralPath $StatePath -Encoding UTF8
+          $RequiredFolders = @(
+            ".\PowerGorilla\app",
+            ".\PowerGorilla\data",
+            ".\PowerGorilla\data\imports",
+            ".\PowerGorilla\data\processed",
+            ".\PowerGorilla\data\icons",
+            ".\PowerGorilla\logs",
+            ".\PowerGorilla\reports",
+            ".\PowerGorilla\backups",
+            ".\PowerGorilla\docs"
+          )
+
+          foreach ($Folder in $RequiredFolders) {
+            New-Item -ItemType Directory -Force -Path $Folder | Out-Null
           }
-          
+
+          Set-Content -LiteralPath ".\PowerGorilla\data\imports\ci-audio-design.csv" -Encoding UTF8 -Value @(
+            "Name,Category,Type,LaunchUrl,Description,IconExtracted,SafeToLaunch,Workflow",
+            "Audacity,Audio,desktop,,Audio editor,true,true,Audacity + Blender",
+            "Blender,Design,desktop,,3D creation suite,true,true,Audacity + Blender"
+          )
+
+          Set-Content -LiteralPath ".\PowerGorilla\data\imports\ci-dev-frontend.csv" -Encoding UTF8 -Value @(
+            "Name,Category,Type,LaunchUrl,Description,IconExtracted,SafeToLaunch,Workflow",
+            "GitHub,Development,online,https://github.com,Code hosting,true,true,GitHub + Vercel",
+            "Vercel,Frontend,online,https://vercel.com,Frontend hosting,true,true,GitHub + Vercel"
+          )
+
+          Set-Content -LiteralPath ".\PowerGorilla\data\imports\ci-backend-ai.csv" -Encoding UTF8 -Value @(
+            "Name,Category,Type,LaunchUrl,Description,IconExtracted,SafeToLaunch,Workflow",
+            "Supabase,Backend,online,https://supabase.com,Backend platform,true,true,Supabase + Ollama + JSON",
+            "Ollama,AI,local,http://localhost:11434,Local AI runtime,true,true,Supabase + Ollama + JSON"
+          )
+
+          $StatePath = ".\PowerGorilla\data\processed\dashboard-state.json"
+
+          @{
+            generatedAt = (Get-Date).ToString("o")
+            source = "github-actions-ci"
+            safety = @{
+              mode = "ci-safe"
+              destructiveActionsTriggered = $false
+              previewOnly = $true
+              realUserDataIncluded = $false
+            }
+            apps = @(
+              @{
+                name = "Audacity"
+                category = "Audio"
+                type = "desktop"
+                IconExtracted = $true
+                safeToLaunch = $true
+              },
+              @{
+                name = "Blender"
+                category = "Design"
+                type = "desktop"
+                IconExtracted = $true
+                safeToLaunch = $true
+              },
+              @{
+                name = "GitHub"
+                category = "Development"
+                type = "online"
+                launchUrl = "https://github.com"
+                IconExtracted = $true
+                safeToLaunch = $true
+              }
+            )
+            workflows = @(
+              @{
+                name = "Audacity + Blender"
+                apps = @("Audacity", "Blender")
+                safeToLaunch = $true
+              },
+              @{
+                name = "GitHub + Vercel"
+                apps = @("GitHub", "Vercel")
+                safeToLaunch = $true
+              }
+            )
+            integrations = @()
+            commands = @()
+            icons = @()
+            categories = @("Audio", "Design", "Development", "Frontend", "Backend", "AI")
+            warnings = @("CI created safe sample data because generated local data is not committed.")
+          } | ConvertTo-Json -Depth 20 | Set-Content -LiteralPath $StatePath -Encoding UTF8
+
           pwsh -NoProfile -Command "Set-StrictMode -Version 2.0; .\PowerGorilla\scripts\Validate-PowerGorilla.ps1 -RefreshData -ExtractIcons | Out-Null"
 
       - name: Upload validation report
@@ -40,4 +112,4 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: powergorilla-validation-report
-          path: PowerGorilla\reports\Validation-Report-*.json
+          path: PowerGorilla/reports/*.json
