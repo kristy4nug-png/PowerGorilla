@@ -1,0 +1,83 @@
+[
+  {
+    "item_id": "stress_test_item_001",
+    "batch_id": "batch_stress_test_100",
+    "sequence_number": 1,
+    "item_type": "workflow",
+    "status": "completed",
+    "input_data": {
+      "workflowName": "Automated Local Audacity & Blender & Everything & Visual Studio Code Workflow",
+      "prompt_text": "Design a highly resilient, local-first Windows command center plan that integrates these exact applications to complete a combined user task: Audacity, Blender, Everything, Visual Studio Code. Keep the task fully open-source, local-first, and free. Enforce costAllowed as true. Output the step-by-step PowerShell plan.",
+      "appNames": [
+        "Audacity",
+        "Blender",
+        "Everything",
+        "Visual Studio Code"
+      ],
+      "combinationSize": 4,
+      "model": "llama3.2:1b"
+    },
+    "worker_id": "worker-node-23928",
+    "started_at": "2026-05-24T08:33:57.820Z",
+    "output_data": {
+      "id": "task-plan",
+      "workflowName": "Audacity-Blender-VSCode-task-plan",
+      "appNames": [
+        "Audacity",
+        "Blender",
+        "Everything",
+        "Visual Studio Code"
+      ],
+      "combinationSize": 4,
+      "description": "Design a highly resilient, local-first Windows command center plan that integrates Audacity, Blender, Everything, and Visual Studio Code to complete a combined user task: create an open-source, free project. The task must be cost-allowed.",
+      "costAllowed": true,
+      "powerShellPlan": [
+        "$baseDir = 'Audacity-Blender-VSCode' ",
+        "$localFirst = @() ; Initialize local-first status",
+        "Add-AuditdCommand -ApplicationName Audacity -ProgramPath $(Get-Item 'C:\bin\fsx-win32\bin\fsx.exe') ",
+        "Add-AuditdCommand -ApplicationName Blender -ProgramPath $(Get-Item 'C:\bin\fsx-win32\bin\fsx.exe') ",
+        "-CommandErrorAction Stop",
+        "Add-EssentialsExtension -Path C:\bin\fsx-win32\bin\fsx.exe ",
+        "Install-Module -Name Everything -EnablePreview true -Force",
+        "-CommandErrorAction Stop",
+        "$localFirst | Out-File -FilePath C:\temp\robocorp.localfirst.yml",
+        "$audacityPackage = [PSScriptResource] 'C:\bin\fsx-win32\bin\fsx.exe' ",
+        "New-ItemCTemplate -Path C:\temp\robocorp.localfirst.yml.template -PropertyType XML -Content @'",
+        "$audacityConfig = ",
+        "$blenderConfig = ",
+        "$everythingConfig = ",
+        "$vsCodeConfig = ",
+        "$audacityPackageCmdLineArgs = @(' --batch-mode', '-i', 'C:\bin\fsx-win32\bin\fsx.exe', '--project', $(Get-Item 'Audacity-Blender-VSCode.yml'), --output-directory', C:\temp, '--version=1.0') ",
+        "$blenderPackageCmdLineArgs = @(' --batch-mode', '-i', 'C:\bin\fsx-win32\bin\fsx.exe', '--project', $(Get-Item 'Blender-Setup.yml'), '--output-directory', C:\temp, '--version=1.0') ",
+        "$everythingConfigCmdLineArgs = @(' --batch-mode', '-i', 'C:\bin\fsx-win32\bin\fsx.exe', '--project', $(Get-Item 'Everything-Setup.yml'), '--output-directory', C:\temp, '--version=1.0') ",
+        "$vsCodePackageCmdLineArgs = @(' --batch-mode', '-i', 'C:\bin\fsx-win32\bin\fsx.exe', '--project', $(Get-Item 'VSCode-Config.yml'), '--output-directory', C:\temp, '--version=1.0') ",
+        "$audacityPackageCmdLineArgs",
+        "$blenderPackageCmdLineArgs",
+        "$everythingConfigCmdLineArgs",
+        "$vsCodePackageCmdLineArgs",
+        "Add-AuditdCommand -ApplicationName Blender -ProgramPath $(Get-Item 'C:\bin\fsx-win32\bin\fsx.exe') ",
+        "Add-EssentialsExtension -Path C:\bin\fsx-win32\bin\fsx.exe ",
+        "-CommandErrorAction Stop",
+        "New-ItemCTemplate -Path C:\temp\robocorp.localfirst.yml.template -PropertyType XML -Content @'",
+        "$audacityCmdLineArgs = $audacityPackageCmdLineArgs",
+        "$blenderCmdLineArgs = $blenderPackageCmdLineArgs",
+        "$everythingCmdLineArgs = $everythingConfigCmdLineArgs",
+        "$vsCodeCmdLineArgs = $vsCodePackageCmdLineArgs",
+        "Add-AuditdCommand -ApplicationName Visual Studio Code -ProgramPath $(Get-Item 'C:\bin\fsx-win32\bin\fsx.exe') ",
+        "-CommandErrorAction Stop",
+        "New-ItemCTemplate -Path C:\temp\robocorp.localfirst.yml.template -PropertyType XML -Content @'",
+        "$audacityConfigCmdLineArgs = @(' --version=1.0', '--config-file', (Get-Item 'Audacity-Blender-VSCode.yml')) ",
+        "$blenderConfigCmdLineArgs = @(' --version=1.0', '--config-file', (Get-Item 'Blender-Setup.yml')) ",
+        "$everythingConfigCmdLineArgs = @(' --version=1.0', '--config-file', (Get-Item 'Everything-Setup.yml')) ",
+        "$vsCodeConfigCmdLineArgs = @(' --version=1.0', '--config-file', (Get-Item 'VSCode-Config.yml')) ",
+        "Add-AuditdCommand -ApplicationName Audacity -ProgramPath $(Get-Item 'C:\bin\fsx-win32\bin\fsx.exe') ",
+        "-CommandErrorAction Stop",
+        "Set-Content -Path C:\temp\robocorp.localfirst.yml -Value @",
+        "$localFirst = $true",
+        ""
+      ]
+    },
+    "completed_at": "2026-05-24T08:36:16.301Z",
+    "duration_ms": 84589.0106
+  }
+]

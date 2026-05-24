@@ -168,6 +168,19 @@ function Get-PGDatasetStatus {
     }
 }
 
+function Import-PGSampleCsv {
+    param(
+        [Parameter(Mandatory)][string]$Path,
+        [int]$MaxRows = 0
+    )
+
+    if ($MaxRows -gt 0) {
+        return @(Get-Content -LiteralPath $Path -TotalCount ($MaxRows + 1) | ConvertFrom-Csv)
+    }
+
+    return @(Import-Csv -LiteralPath $Path)
+}
+
 function Normalize-PGAppName {
     param([AllowNull()][string]$Name)
     if ([string]::IsNullOrWhiteSpace($Name)) { return '' }
@@ -252,6 +265,36 @@ function Get-PGLicenseProfile {
     }
 }
 
+function Test-PGAllowedCostProfile {
+    param([AllowNull()]$App)
+
+    if ($null -eq $App) { return $true }
+
+    $mode = [string]$App.LicenceMode
+    $text = ('{0} {1} {2} {3} {4} {5}' -f $App.Name, $App.Category, $App.Source, $App.SignInMode, $App.LocalMode, $mode).ToLowerInvariant()
+    $explicitlyFree = $App.IsOpenSource -or $App.IsFreeOrFreeTier -or $mode -match 'open.?source|free|free.?tier|built.?in'
+
+    if ($mode -match 'paid|trial|subscription|commercial') { return $false }
+    if (-not $explicitlyFree -and $text -match 'paid|subscription|commercial|premium|pro plan|enterprise plan|adobe creative cloud|microsoft 365|office 365') {
+        return $false
+    }
+
+    return $true
+}
+
+function Get-PGCostPolicyNote {
+    param([AllowNull()]$App)
+
+    if (Test-PGAllowedCostProfile -App $App) {
+        if ($App -and ($App.IsOpenSource -or $App.IsFreeOrFreeTier -or [string]$App.LicenceMode -match 'built.?in|free|open.?source')) {
+            return 'Allowed: free, open-source, built-in, or free-tier.'
+        }
+        return 'Allowed pending manual review: no paid/subscription signal detected.'
+    }
+
+    return 'Blocked: paid, trial, commercial, premium, or subscription signal detected.'
+}
+
 function Get-PGSignInClassification {
     param(
         [AllowNull()][string]$Name,
@@ -293,24 +336,66 @@ function Get-PGSignInClassification {
     }
 }
 
+function Get-PGAppConfidence {
+    param(
+        [AllowNull()]$App,
+        [string]$Root
+    )
+
+    if ($null -eq $App) { return [pscustomobject]@{ Confidence = 0; Label = 'NotApp' } }
+
+    $score = 0
+    try {
+        if ($App.Status -eq 'Installed' -or $App.Installed) { $score += 40 }
+        if ($App.ExecutablePath) {
+            $exe = $App.ExecutablePath -replace '"',''
+            if (Test-Path -LiteralPath $exe) { $score += 20 }
+        }
+        if ($App.InstallPath) {
+            $path = $App.InstallPath -replace '"',''
+            if (Test-Path -LiteralPath $path) { $score += 10 }
+        }
+        if ($App.ShortcutPath) {
+            $lnk = $App.ShortcutPath -replace '"',''
+            if (Test-Path -LiteralPath $lnk) { $score += 10 }
+        }
+        if ($App.IconSourcePath) {
+            $ico = $App.IconSourcePath -replace '"',''
+            if (Test-Path -LiteralPath $ico) { $score += 5 }
+        }
+        if ($App.Publisher) { $score += 2 }
+        if ($App.IsOpenSource) { $score += 5 }
+        if ($App.IsFreeOrFreeTier) { $score += 3 }
+        if ($App.SeenInWorkflows) { $score += [Math]::Min(15, [int]$App.SeenInWorkflows * 3) }
+    } catch { }
+
+    $score = [Math]::Max(0, [Math]::Min(100, [int]$score))
+    $label = if ($score -ge 80) { 'Real' } elseif ($score -ge 50) { 'Likely' } elseif ($score -ge 25) { 'Possible' } else { 'NotApp' }
+
+    return [pscustomobject]@{ Confidence = $score; Label = $label }
+}
+
 function Resolve-PGIconSourcePath {
     param([AllowNull()][string]$RawPath)
 
     if ([string]::IsNullOrWhiteSpace($RawPath)) { return $null }
     $value = [Environment]::ExpandEnvironmentVariables($RawPath.Trim())
     $value = $value.Trim('"')
+    if ([string]::IsNullOrWhiteSpace($value)) { return $null }
 
     if ($value -match '^(.+?)(,\-?\d+)$') {
         $candidate = $matches[1].Trim('"')
-        if (Test-Path -LiteralPath $candidate) { return (Resolve-Path -LiteralPath $candidate).Path }
+        if (-not [string]::IsNullOrWhiteSpace($candidate) -and (Test-Path -LiteralPath $candidate)) {
+            return (Resolve-Path -LiteralPath $candidate).Path
+        }
     }
 
-    if (Test-Path -LiteralPath $value) {
+    if (-not [string]::IsNullOrWhiteSpace($value) -and (Test-Path -LiteralPath $value)) {
         return (Resolve-Path -LiteralPath $value).Path
     }
 
     $first = ($value -split ',')[0].Trim('"')
-    if (Test-Path -LiteralPath $first) {
+    if (-not [string]::IsNullOrWhiteSpace($first) -and (Test-Path -LiteralPath $first)) {
         return (Resolve-Path -LiteralPath $first).Path
     }
 
@@ -453,7 +538,7 @@ function Import-PGProperApps {
 
     $dataset = Get-PGDatasetStatus -Root $Root | Where-Object Type -eq 'Apps' | Select-Object -First 1
     if (-not $dataset -or -not $dataset.Exists) {
-        return @(Get-PGAppCandidatesFromIntegrationDatasets -Root $Root)
+        return @(Get-PGAppCandidatesFromIntegrationDatasets -Root $Root -MaxRowsPerDataset 4000)
     }
 
     $rows = Import-Csv -LiteralPath $dataset.Path
@@ -500,9 +585,8 @@ function Get-PGAppCandidatesFromIntegrationDatasets {
 
     foreach ($dataset in $datasets) {
         $rowIndex = 0
-        foreach ($row in Import-Csv -LiteralPath $dataset.Path) {
+        foreach ($row in (Import-PGSampleCsv -Path $dataset.Path -MaxRows $MaxRowsPerDataset)) {
             $rowIndex++
-            if ($MaxRowsPerDataset -gt 0 -and $rowIndex -gt $MaxRowsPerDataset) { break }
 
             $apps = @(Get-PGIntegrationApps -Row $row -Size $dataset.CombinationSize)
             for ($i = 0; $i -lt $apps.Count; $i++) {
@@ -610,7 +694,7 @@ function Get-PGAppInventory {
             $key = $app.NormalizedName
             if ($seen.ContainsKey($key)) { continue }
             $seen[$key] = $true
-            $inventory.Add([pscustomobject]@{
+            $record = [pscustomobject]@{
                 Id = New-PGId $app.Name
                 Name = $app.Name
                 NormalizedName = $app.NormalizedName
@@ -633,7 +717,14 @@ function Get-PGAppInventory {
                 Publisher = if ($match) { $match.Publisher } else { $null }
                 Version = if ($match) { $match.Version } else { $null }
                 LastScanned = (Get-Date).ToString('o')
-            })
+            }
+            $record | Add-Member -NotePropertyName CostAllowed -NotePropertyValue (Test-PGAllowedCostProfile -App $record)
+            $record | Add-Member -NotePropertyName CostPolicy -NotePropertyValue 'Local-first; no paid subscriptions; free-tier only when a cloud service is unavoidable.'
+            $record | Add-Member -NotePropertyName CostNotes -NotePropertyValue (Get-PGCostPolicyNote -App $record)
+            $conf = Get-PGAppConfidence -App $record -Root $rootPath
+            $record | Add-Member -NotePropertyName Confidence -NotePropertyValue $conf.Confidence
+            $record | Add-Member -NotePropertyName ConfidenceLabel -NotePropertyValue $conf.Label
+            $inventory.Add($record)
         }
     }
 
@@ -647,7 +738,7 @@ function Get-PGAppInventory {
         if ($app.ExecutablePath -and ($app.ExecutablePath -match '\\AppData\\|\\Portable\\|\\scoop\\|\\tools\\')) {
             $status = 'Portable'
         }
-        $inventory.Add([pscustomobject]@{
+        $record = [pscustomobject]@{
             Id = New-PGId $app.Name
             Name = $app.Name
             NormalizedName = $app.NormalizedName
@@ -670,7 +761,14 @@ function Get-PGAppInventory {
             Publisher = $app.Publisher
             Version = $app.Version
             LastScanned = (Get-Date).ToString('o')
-        })
+        }
+        $record | Add-Member -NotePropertyName CostAllowed -NotePropertyValue (Test-PGAllowedCostProfile -App $record)
+        $record | Add-Member -NotePropertyName CostPolicy -NotePropertyValue 'Local-first; no paid subscriptions; free-tier only when a cloud service is unavoidable.'
+        $record | Add-Member -NotePropertyName CostNotes -NotePropertyValue (Get-PGCostPolicyNote -App $record)
+        $conf = Get-PGAppConfidence -App $record -Root $rootPath
+        $record | Add-Member -NotePropertyName Confidence -NotePropertyValue $conf.Confidence
+        $record | Add-Member -NotePropertyName ConfidenceLabel -NotePropertyValue $conf.Label
+        $inventory.Add($record)
     }
 
     $result = @($inventory | Sort-Object Name)
@@ -885,7 +983,7 @@ function Import-PGIntegrationDatasets {
         if (-not $dataset.Exists) { continue }
         $rowIndex = 0
         $addedForDataset = 0
-        foreach ($row in Import-Csv -LiteralPath $dataset.Path) {
+        foreach ($row in (Import-PGSampleCsv -Path $dataset.Path -MaxRows $SamplePerDataset)) {
             $rowIndex++
             if ($SamplePerDataset -gt 0 -and $addedForDataset -ge $SamplePerDataset) { break }
             $apps = @(Get-PGIntegrationApps -Row $row -Size $dataset.CombinationSize)
@@ -907,6 +1005,8 @@ function Import-PGIntegrationDatasets {
             }
 
             $resolvedApps = foreach ($name in $apps) { Resolve-PGInventoryApp -Name $name -InventoryMap $inventoryMap }
+            $blockedCostApps = @($resolvedApps | Where-Object { $_ -and -not (Test-PGAllowedCostProfile -App $_) })
+            if ($blockedCostApps.Count -gt 0) { continue }
             $installedCount = @($resolvedApps | Where-Object { $_ -and $_.Installed }).Count
             $openSourceCount = @($resolvedApps | Where-Object { $_ -and $_.IsOpenSource }).Count
             $freeCount = @($resolvedApps | Where-Object { $_ -and $_.IsFreeOrFreeTier }).Count
@@ -921,6 +1021,8 @@ function Import-PGIntegrationDatasets {
             $score += $openSourceCount * 10
             $score += $freeCount * 8
             $score += $localCount * 12
+            if ($freeCount -eq $apps.Count -or $openSourceCount -eq $apps.Count) { $score += 25 }
+            if ($localCount -eq $apps.Count) { $score += 25 }
             if ($risk -eq 'Low') { $score += 20 } elseif ($risk -eq 'Medium') { $score += 5 } else { $score -= 30 }
             if ($automation -eq 'Automation-ready') { $score += 18 }
             if ($difficulty -eq 'Easy') { $score += 10 }
@@ -945,6 +1047,9 @@ function Import-PGIntegrationDatasets {
                 FreeOpenSourceStatus = if ($openSourceCount -eq $apps.Count) { 'All open-source' } elseif ($freeCount -eq $apps.Count) { 'All free/free-tier where known' } elseif ($freeCount -gt 0 -or $openSourceCount -gt 0) { 'Mixed free/open-source status' } else { 'Unknown' }
                 SignInRequirement = if ($signin.Count -gt 0) { ($signin -join '; ') } else { 'No sign-in needed where known' }
                 LocalOnlyAvailability = if ($localCount -eq $apps.Count) { 'Local-only available' } elseif ($localCount -gt 0) { 'Partial local mode' } else { 'Unknown or cloud-assisted' }
+                CostAllowed = $true
+                CostPolicy = 'Local-first; no paid subscriptions; free-tier only when a cloud service is unavoidable.'
+                BlockedCostApps = @()
                 CommandsAvailable = @('Preview Plan','Export Plan','Add to Favourites','Launch Apps -WhatIf','Generate PowerShell Plan')
                 SafeNextAction = 'Preview Plan'
                 RankScore = $score
@@ -976,7 +1081,8 @@ function Get-PGIntegrationSearch {
         [switch]$EasyOnly,
         [switch]$AutomationReadyOnly,
         [string]$Category,
-        [int]$First = 100
+        [int]$First = 100,
+        [switch]$UseRawSource
     )
 
     $rootPath = Get-PGRoot -Root $Root
@@ -984,7 +1090,58 @@ function Get-PGIntegrationSearch {
     $needsSourceScan = $selected.Count -gt 0 -or $Query -or $CombinationSize -gt 0 -or $InstalledOnly -or $OpenSourceOnly -or $FreeOnly -or $LocalOnly -or $EasyOnly -or $AutomationReadyOnly -or $Category
 
     if (-not $needsSourceScan) {
-        return @(Import-PGIntegrationDatasets -Root $rootPath | Sort-Object RankScore -Descending | Select-Object -First $First)
+        return @(Import-PGIntegrationDatasets -Root $rootPath | Where-Object { $_.CostAllowed -ne $false } | Sort-Object RankScore -Descending | Select-Object -First $First)
+    }
+
+    $processedPath = Join-Path $rootPath 'data\processed\integrations.json'
+    if (-not $UseRawSource -and (Test-Path -LiteralPath $processedPath)) {
+        try {
+            $cached = @(Get-Content -LiteralPath $processedPath -Raw | ConvertFrom-Json)
+            $terms = if ($Query) { @($Query.ToLowerInvariant() -split '\s+' | Where-Object { $_ }) } else { @() }
+            return @(
+                $cached | Where-Object {
+                    $include = $true
+                    if ($_.CostAllowed -eq $false) { $include = $false }
+                    if ($include -and $CombinationSize -gt 0 -and [int]$_.CombinationSize -ne $CombinationSize) { $include = $false }
+
+                    $rowNames = if ($_.NormalizedAppNames) {
+                        @($_.NormalizedAppNames | ForEach-Object { [string]$_ })
+                    } else {
+                        @($_.AppNames | ForEach-Object { Normalize-PGAppName $_ })
+                    }
+
+                    if ($include) {
+                        foreach ($selectedName in $selected) {
+                            if ($rowNames -notcontains $selectedName) {
+                                $include = $false
+                                break
+                            }
+                        }
+                    }
+
+                    if ($include -and $Category -and [string]$_.Category -notlike "*$Category*") { $include = $false }
+                    if ($include -and $terms.Count -gt 0) {
+                        $haystack = ('{0} {1} {2} {3}' -f $_.WorkflowName, $_.Description, $_.Category, ($_.AppNames -join ' ')).ToLowerInvariant()
+                        foreach ($term in $terms) {
+                            if (-not $haystack.Contains($term)) {
+                                $include = $false
+                                break
+                            }
+                        }
+                    }
+
+                    if ($include -and $InstalledOnly -and [int]$_.InstalledCount -lt [int]$_.CombinationSize) { $include = $false }
+                    if ($include -and $OpenSourceOnly -and [int]$_.OpenSourceCount -lt [int]$_.CombinationSize) { $include = $false }
+                    if ($include -and $FreeOnly -and [int]$_.FreeCount -lt [int]$_.CombinationSize) { $include = $false }
+                    if ($include -and $LocalOnly -and [int]$_.LocalCount -lt [int]$_.CombinationSize) { $include = $false }
+                    if ($include -and $EasyOnly -and [string]$_.Difficulty -ne 'Easy') { $include = $false }
+                    if ($include -and $AutomationReadyOnly -and [string]$_.AutomationReadiness -ne 'Automation-ready') { $include = $false }
+                    $include
+                } | Sort-Object RankScore -Descending | Select-Object -First $First
+            )
+        } catch {
+            Write-PGLog -Root $rootPath -Area 'Integrations' -Message 'Cached integration search failed; falling back to raw datasets.' -Data @{ Error = $_.Exception.Message }
+        }
     }
 
     $inventory = @(Get-PGAppInventory -Root $rootPath)
@@ -1042,6 +1199,8 @@ function Get-PGIntegrationSearch {
             }
 
             $resolvedApps = foreach ($name in $appsForRow) { Resolve-PGInventoryApp -Name $name -InventoryMap $inventoryMap }
+            $blockedCostApps = @($resolvedApps | Where-Object { $_ -and -not (Test-PGAllowedCostProfile -App $_) })
+            if ($blockedCostApps.Count -gt 0) { continue }
             $installedCount = @($resolvedApps | Where-Object { $_ -and $_.Installed }).Count
             $openSourceCount = @($resolvedApps | Where-Object { $_ -and $_.IsOpenSource }).Count
             $freeCount = @($resolvedApps | Where-Object { $_ -and $_.IsFreeOrFreeTier }).Count
@@ -1063,6 +1222,8 @@ function Get-PGIntegrationSearch {
             $score += $openSourceCount * 10
             $score += $freeCount * 8
             $score += $localCount * 12
+            if ($freeCount -eq $appsForRow.Count -or $openSourceCount -eq $appsForRow.Count) { $score += 25 }
+            if ($localCount -eq $appsForRow.Count) { $score += 25 }
             if ($risk -eq 'Low') { $score += 20 } elseif ($risk -eq 'Medium') { $score += 5 } else { $score -= 30 }
             if ($automation -eq 'Automation-ready') { $score += 18 }
             if ($difficulty -eq 'Easy') { $score += 10 }
@@ -1087,6 +1248,9 @@ function Get-PGIntegrationSearch {
                 FreeOpenSourceStatus = if ($openSourceCount -eq $appsForRow.Count) { 'All open-source' } elseif ($freeCount -eq $appsForRow.Count) { 'All free/free-tier where known' } elseif ($freeCount -gt 0 -or $openSourceCount -gt 0) { 'Mixed free/open-source status' } else { 'Unknown' }
                 SignInRequirement = if ($signin.Count -gt 0) { ($signin -join '; ') } else { 'No sign-in needed where known' }
                 LocalOnlyAvailability = if ($localCount -eq $appsForRow.Count) { 'Local-only available' } elseif ($localCount -gt 0) { 'Partial local mode' } else { 'Unknown or cloud-assisted' }
+                CostAllowed = $true
+                CostPolicy = 'Local-first; no paid subscriptions; free-tier only when a cloud service is unavoidable.'
+                BlockedCostApps = @()
                 CommandsAvailable = @('Preview Plan','Export Plan','Add to Favourites','Launch Apps -WhatIf','Generate PowerShell Plan')
                 SafeNextAction = 'Preview Plan'
                 RankScore = $score
@@ -1126,8 +1290,9 @@ function Get-PGWorkflowSuggestions {
         foreach ($app in $workflow.AppNames) {
             $norm = Normalize-PGAppName $app
             if ($selected -contains $norm) { continue }
+            $resolved = Resolve-PGInventoryApp -Name $app -InventoryMap $inventoryMap
+            if ($resolved -and -not (Test-PGAllowedCostProfile -App $resolved)) { continue }
             if (-not $scores.ContainsKey($norm)) {
-                $resolved = Resolve-PGInventoryApp -Name $app -InventoryMap $inventoryMap
                 $scores[$norm] = [ordered]@{
                     Name = $app
                     Score = 0
@@ -1135,6 +1300,7 @@ function Get-PGWorkflowSuggestions {
                     Installed = if ($resolved) { [bool]$resolved.Installed } else { $false }
                     IsOpenSource = if ($resolved) { [bool]$resolved.IsOpenSource } else { $false }
                     IsFreeOrFreeTier = if ($resolved) { [bool]$resolved.IsFreeOrFreeTier } else { $false }
+                    CostAllowed = $true
                     LocalMode = if ($resolved) { $resolved.LocalMode } else { 'Unknown' }
                     IconUrl = if ($resolved) { $resolved.IconUrl } else { '../data/icons/fallback-app.svg' }
                 }
@@ -1149,6 +1315,18 @@ function Get-PGWorkflowSuggestions {
     }
 
     return @($scores.Values | ForEach-Object { [pscustomobject]$_ } | Sort-Object Score -Descending | Select-Object -First $First)
+}
+
+function Get-PGSuggestedWorkflows {
+    [CmdletBinding()]
+    param(
+        [string]$Root,
+        [int]$First = 12
+    )
+
+    $rootPath = Get-PGRoot -Root $Root
+    $workflows = @(Import-PGIntegrationDatasets -Root $rootPath)
+    return @($workflows | Where-Object { $_.CostAllowed -ne $false } | Sort-Object RankScore -Descending | Select-Object -First $First)
 }
 
 function Get-PGSignInReport {
@@ -1185,9 +1363,10 @@ function New-PGDashboardState {
 
     $rootPath = Get-PGRoot -Root $Root
     $inventory = @(Get-PGAppInventory -Root $rootPath)
-    $integrations = @(Import-PGIntegrationDatasets -Root $rootPath)
+    $integrations = @(Import-PGIntegrationDatasets -Root $rootPath | Where-Object { $_.CostAllowed -ne $false })
     $signIn = @(Get-PGSignInReport -Root $rootPath)
     $datasets = @(Get-PGDatasetStatus -Root $rootPath)
+    $suggestions = @(Get-PGSuggestedWorkflows -Root $rootPath -First 12)
     $favoritesPath = Join-Path $rootPath 'data\processed\favourites.json'
     $favorites = @()
     if (Test-Path -LiteralPath $favoritesPath) {
@@ -1201,16 +1380,22 @@ function New-PGDashboardState {
             destructiveActionsEnabled = $false
             dangerousButtonsPreviewOnly = $true
             credentialsStored = $false
+            costPolicy = 'Local-first; no paid subscriptions; free-tier only when a cloud service is unavoidable.'
+            paidOrTrialBlocked = $true
+            localFirst = $true
         }
         datasets = @($datasets)
         apps = @($inventory)
         integrations = @($integrations)
         signIn = @($signIn)
+        suggestions = @($suggestions)
         favourites = @($favorites)
         stats = [ordered]@{
             apps = $inventory.Count
             installedApps = @($inventory | Where-Object Installed).Count
             missingApps = @($inventory | Where-Object { -not $_.Installed }).Count
+            costAllowedApps = @($inventory | Where-Object { $_.CostAllowed -ne $false }).Count
+            blockedPaidApps = @($inventory | Where-Object { $_.CostAllowed -eq $false }).Count
             workflows = $integrations.Count
             twoApp = @($integrations | Where-Object CombinationSize -eq 2).Count
             threeApp = @($integrations | Where-Object CombinationSize -eq 3).Count
@@ -1516,12 +1701,33 @@ function Save-PGPlanReport {
     return [pscustomobject]@{ saved = $true; path = $path }
 }
 
+function Get-PGBrowserAppMode {
+    param([Parameter(Mandatory)][string]$Url)
+
+    $browsers = @(
+        'msedge.exe',
+        'chrome.exe',
+        'brave.exe',
+        'opera.exe'
+    )
+
+    foreach ($browserName in $browsers) {
+        $cmd = Get-Command $browserName -ErrorAction SilentlyContinue
+        if ($cmd) {
+            return [ordered]@{ Exe = $cmd.Source; Args = "--app=$Url" }
+        }
+    }
+
+    return $null
+}
+
 function Start-PGDashboardServer {
     [CmdletBinding()]
     param(
         [string]$Root,
         [int]$Port = 8765,
-        [switch]$OpenBrowser
+        [switch]$OpenBrowser,
+        [switch]$AppMode
     )
 
     $rootPath = Get-PGRoot -Root $Root
@@ -1544,7 +1750,14 @@ function Start-PGDashboardServer {
     Write-PGLog -Root $rootPath -Area 'Dashboard' -Message "Dashboard server started at $prefix"
     Write-Host "Power Gorilla dashboard: $prefix" -ForegroundColor Cyan
     Write-Host 'Press Ctrl+C in this PowerShell window to stop the local server.' -ForegroundColor DarkGray
-    if ($OpenBrowser) {
+    if ($AppMode) {
+        $browser = Get-PGBrowserAppMode -Url $prefix
+        if ($browser) {
+            Start-Process -FilePath $browser.Exe -ArgumentList $browser.Args
+        } else {
+            Start-Process $prefix
+        }
+    } elseif ($OpenBrowser) {
         Start-Process $prefix
     }
 
@@ -1614,4 +1827,101 @@ function Start-PGDashboardServer {
     }
 }
 
-Export-ModuleMember -Function Initialize-PGProject,Invoke-PGRefreshData,Get-PGDatasetStatus,Get-PGAppInventory,Import-PGIntegrationDatasets,Get-PGIntegrationSearch,Get-PGWorkflowSuggestions,Get-PGSignInReport,Update-PGIconCache,Invoke-PGCommand,Get-PGSystemHealth,Get-PGDiskHealth,Get-PGOllamaModels,Get-PGStartupApps,Get-PGPorts,New-PGWorkflowActionPlan,Start-PGDashboardServer,Write-PGLog
+Export-ModuleMember -Function Initialize-PGProject,Invoke-PGRefreshData,Get-PGDatasetStatus,Get-PGAppInventory,Import-PGIntegrationDatasets,Get-PGIntegrationSearch,Get-PGWorkflowSuggestions,Get-PGSuggestedWorkflows,Get-PGSignInReport,Update-PGIconCache,Invoke-PGCommand,Get-PGSystemHealth,Get-PGDiskHealth,Get-PGOllamaModels,Get-PGStartupApps,Get-PGPorts,New-PGWorkflowActionPlan,Start-PGDashboardServer,Write-PGLog,Update-SupabaseRow,Move-ToDeadLetterQueue,Send-ToDownstreamApp
+
+function Update-SupabaseRow {
+    [CmdletBinding()]
+    param(
+        [string]$Table = 'app_queue',
+        [Parameter(Mandatory=$true)][object]$RowId,
+        [Parameter(Mandatory=$true)][string]$Status,
+        [string]$Error = $null
+    )
+
+    if (-not $env:SUPABASE_URL -or -not $env:SUPABASE_KEY) {
+        Write-Warning 'SUPABASE_URL or SUPABASE_KEY not configured in environment.'
+        return $false
+    }
+
+    $url = "$($env:SUPABASE_URL)/rest/v1/$Table?id=eq.$RowId"
+    $body = @{ status = $Status; error = $Error; updated_at = (Get-Date).ToString('o') } | ConvertTo-Json
+    try {
+        Invoke-RestMethod -Method Patch -Uri $url -Headers @{ 
+            "apiKey" = $env:SUPABASE_KEY
+            "Authorization" = "Bearer $($env:SUPABASE_KEY)"
+            "Content-Type" = "application/json"
+            "Prefer" = "return=representation"
+        } -Body $body -ErrorAction Stop | Out-Null
+        return $true
+    } catch {
+        Write-Warning "Update-SupabaseRow failed: $($_.Exception.Message)"
+        return $false
+    }
+}
+
+function Move-ToDeadLetterQueue {
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory=$true)][object]$RowId,
+        [string]$SourceTable = 'app_queue',
+        [string]$DLQTable = 'dead_letter_queue',
+        [string]$RawPayload = $null
+    )
+
+    if (-not $env:SUPABASE_URL -or -not $env:SUPABASE_KEY) {
+        Write-Warning 'SUPABASE_URL or SUPABASE_KEY not configured in environment.'
+        return $false
+    }
+
+    $getUrl = "$($env:SUPABASE_URL)/rest/v1/$SourceTable?id=eq.$RowId"
+    try {
+        $row = Invoke-RestMethod -Uri $getUrl -Headers @{ "apiKey" = $env:SUPABASE_KEY; "Authorization" = "Bearer $($env:SUPABASE_KEY)" } -ErrorAction Stop
+        if (-not $row -or $row.Count -eq 0) { Write-Warning "Row $RowId not found"; return $false }
+
+        $dlqPayload = $row[0]
+        $dlqPayload | Add-Member -PassThru -NotePropertyName dead_lettered_at -NotePropertyValue (Get-Date).ToString('o') | Out-Null
+        if ($RawPayload) {
+            $dlqPayload | Add-Member -PassThru -NotePropertyName raw_llm -NotePropertyValue $RawPayload | Out-Null
+        }
+
+        $postUrl = "$($env:SUPABASE_URL)/rest/v1/$DLQTable"
+        Invoke-RestMethod -Method Post -Uri $postUrl -Headers @{ 
+            "apiKey" = $env:SUPABASE_KEY
+            "Authorization" = "Bearer $($env:SUPABASE_KEY)"
+            "Content-Type" = "application/json"
+            "Prefer" = "return=representation"
+        } -Body ($dlqPayload | ConvertTo-Json -Depth 10) -ErrorAction Stop | Out-Null
+
+        Update-SupabaseRow -Table $SourceTable -RowId $RowId -Status 'dead_lettered' -Error 'Moved to DLQ'
+        return $true
+    } catch {
+        Write-Error "Move-ToDeadLetterQueue error: $($_.Exception.Message)"
+        return $false
+    }
+}
+
+function Send-ToDownstreamApp {
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory=$true)][object]$Response,
+        [string]$WebhookEnv = 'DOWNSTREAM_URL',
+        [int]$Retries = 3
+    )
+
+    $url = $null
+    try { $url = (Get-Item -Path Env:\$WebhookEnv).Value } catch { }
+    if (-not $url) { Write-Error "Downstream URL not configured in env var $WebhookEnv"; return $false }
+
+    $payload = $Response | ConvertTo-Json -Depth 10
+    for ($i=1; $i -le $Retries; $i++) {
+        try {
+            Invoke-RestMethod -Uri $url -Method Post -Headers @{ "Content-Type" = "application/json" } -Body $payload -TimeoutSec 30 -ErrorAction Stop
+            return $true
+        } catch {
+            Write-Warning "Send-ToDownstreamApp attempt $i failed: $($_.Exception.Message)"
+            Start-Sleep -Seconds (2 * $i)
+        }
+    }
+    Write-Error "Send-ToDownstreamApp failed after $Retries attempts"
+    return $false
+}

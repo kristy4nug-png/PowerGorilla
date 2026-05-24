@@ -6,7 +6,7 @@
 
 [CmdletBinding(SupportsShouldProcess)]
 param(
-    [string]$Root = (Split-Path -Parent $PSScriptRoot),
+    [string]$Root,
     [switch]$ExtractIcons,
     [switch]$SkipDataRefresh,
     [switch]$CreateDesktopIcon,
@@ -16,6 +16,19 @@ param(
 
 $ErrorActionPreference = 'Stop'
 Set-StrictMode -Version 2.0
+
+if ([string]::IsNullOrEmpty($Root)) {
+    if ($PSScriptRoot) {
+        $Root = Split-Path -Parent $PSScriptRoot
+    } else {
+        $scriptPath = $MyInvocation.MyCommand.Path
+        if ($scriptPath) {
+            $Root = Split-Path -Parent (Split-Path -Parent $scriptPath)
+        } else {
+            $Root = (Get-Location).Path
+        }
+    }
+}
 
 function Write-SetupStep {
     param(
@@ -74,6 +87,16 @@ function Get-PGDesktopShortcutPath {
     return Join-Path $desktop 'Power Gorilla.lnk'
 }
 
+function Get-PGPreferredShell {
+    $pwsh = Get-Command pwsh.exe -ErrorAction SilentlyContinue
+    if ($pwsh) { return $pwsh.Source }
+
+    $powershell = Get-Command powershell.exe -ErrorAction SilentlyContinue
+    if ($powershell) { return $powershell.Source }
+
+    throw 'No PowerShell host found on PATH.'
+}
+
 function Set-PGDesktopShortcut {
     param([Parameter(Mandatory)][string]$RootPath)
 
@@ -84,11 +107,11 @@ function Set-PGDesktopShortcut {
     }
     $shell = New-Object -ComObject WScript.Shell
     $shortcut = $shell.CreateShortcut($shortcutPath)
-    $shortcut.TargetPath = (Get-Command powershell.exe).Source
-    $shortcut.Arguments = ('-NoProfile -ExecutionPolicy Bypass -File "{0}"' -f $launcher)
+    $shortcut.TargetPath = Get-PGPreferredShell
+    $shortcut.Arguments = ('-NoProfile -ExecutionPolicy Bypass -File "{0}" -AppMode' -f $launcher)
     $shortcut.WorkingDirectory = $RootPath
     $icon = Join-Path $RootPath 'data\icons\fallback-app.svg'
-    $ico = Join-Path (Split-Path -Parent $RootPath) 'assets\gorrilla-launcher.ico'
+    $ico = Join-Path $RootPath 'assets\gorrilla-launcher.ico'
     if (Test-Path -LiteralPath $ico) { $shortcut.IconLocation = $ico }
     elseif (Test-Path -LiteralPath $icon) { $shortcut.IconLocation = $icon }
     $shortcut.Description = 'Power Gorilla local Windows command centre'

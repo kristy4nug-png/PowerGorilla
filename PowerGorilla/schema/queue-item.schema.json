@@ -1,0 +1,91 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "gorilla/queue-item/v1",
+  "title": "Queue Item Payload",
+  "description": "A single unit of work in the batch processing pipeline",
+  "type": "object",
+  "required": ["item_id", "item_type", "input_data"],
+  "additionalProperties": false,
+  "properties": {
+    "item_id": {
+      "type": "string",
+      "pattern": "^[a-zA-Z0-9_-]+$",
+      "description": "Unique identifier for this queue item"
+    },
+    "batch_id": {
+      "type": "string",
+      "pattern": "^batch_[a-zA-Z0-9_]+$",
+      "description": "Parent batch job identifier"
+    },
+    "sequence_number": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Order of execution within the batch"
+    },
+    "item_type": {
+      "type": "string",
+      "enum": ["prompt", "embedding", "extraction", "workflow", "app-analysis"],
+      "description": "Classification of the work unit"
+    },
+    "priority": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 100,
+      "default": 50,
+      "description": "Higher = process first"
+    },
+    "input_data": {
+      "type": "object",
+      "description": "Payload for processing. Schema depends on item_type."
+    },
+    "input_schema": {
+      "type": "string",
+      "description": "Reference to JSON schema that validates input_data"
+    },
+    "output_schema": {
+      "type": "string",
+      "description": "Reference to JSON schema that output_data must conform to"
+    },
+    "max_retries": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 10,
+      "default": 3,
+      "description": "How many times to retry on failure"
+    },
+    "tags": {
+      "type": "array",
+      "items": { "type": "string" },
+      "default": [],
+      "description": "Metadata tags for filtering/monitoring"
+    },
+    "parent_item_id": {
+      "type": ["string", "null"],
+      "description": "If this item depends on another item's output"
+    },
+    "timeout_seconds": {
+      "type": "integer",
+      "minimum": 10,
+      "maximum": 3600,
+      "default": 300,
+      "description": "Max time to wait for processing"
+    }
+  },
+  "examples": [
+    {
+      "item_id": "item_20260524_001",
+      "batch_id": "batch_20260524_001",
+      "sequence_number": 1,
+      "item_type": "prompt",
+      "priority": 50,
+      "input_data": {
+        "prompt_text": "Analyze the following Windows app...",
+        "model": "llama2",
+        "temperature": 0.7
+      },
+      "input_schema": "gorilla/prompt-item/v1",
+      "output_schema": "gorilla/llm-response/v1",
+      "max_retries": 3
+    }
+  ]
+}

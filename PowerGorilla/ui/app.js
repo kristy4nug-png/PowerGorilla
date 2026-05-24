@@ -7,7 +7,10 @@
       mode: 'Strict Safe Mode',
       destructiveActionsEnabled: false,
       dangerousButtonsPreviewOnly: true,
-      credentialsStored: false
+      credentialsStored: false,
+      costPolicy: 'Local-first; no paid subscriptions; free-tier only when a cloud service is unavoidable.',
+      paidOrTrialBlocked: true,
+      localFirst: true
     },
     datasets: [],
     apps: [],
@@ -18,6 +21,8 @@
       apps: 0,
       installedApps: 0,
       missingApps: 0,
+      costAllowedApps: 0,
+      blockedPaidApps: 0,
       workflows: 0,
       twoApp: 0,
       threeApp: 0,
@@ -60,6 +65,14 @@
       || state.apps.find((app) => normalized(app.Name).includes(target) || target.includes(normalized(app.Name)));
   }
 
+  function isPaidBlocked(app) {
+    if (!app) return false;
+    if (app.CostAllowed === false) return true;
+    const text = normalized(`${app.Name} ${app.Category} ${app.LicenceMode} ${app.Source} ${app.SignInMode}`);
+    const explicitlyFree = app.IsOpenSource || app.IsFreeOrFreeTier || /open source|free|free tier|built in/.test(text);
+    return !explicitlyFree && /paid|trial|subscription|commercial|premium|pro plan|enterprise plan/.test(text);
+  }
+
   function badge(label, type) {
     return `<span class="badge ${type || ''}">${safe(label)}</span>`;
   }
@@ -68,9 +81,14 @@
     const items = [];
     if (app.Installed) items.push(badge(app.Status || 'Installed', 'ok'));
     else items.push(badge(app.Status || 'Missing', 'warn'));
+    if (isPaidBlocked(app)) items.push(badge('Blocked paid', 'risk'));
     if (app.IsOpenSource) items.push(badge('Open-source', 'ok'));
     else if (app.IsFreeOrFreeTier) items.push(badge('Free/free-tier', 'ok'));
     if (String(app.LocalMode || '').includes('Local mode available')) items.push(badge('Local', 'info'));
+    if (typeof app.Confidence !== 'undefined') {
+      const confType = app.ConfidenceLabel === 'Real' ? 'ok' : app.ConfidenceLabel === 'Likely' ? 'info' : app.ConfidenceLabel === 'Possible' ? 'warn' : 'risk';
+      items.push(badge(`${app.Confidence}% ${app.ConfidenceLabel}`, confType));
+    }
     return items.join('');
   }
 
@@ -90,7 +108,7 @@
       ['Apps', state.stats.apps],
       ['Installed', state.stats.installedApps],
       ['Workflows', state.stats.workflows],
-      ['Icons cached', state.stats.iconsExtracted]
+      ['Allowed free/local', state.stats.costAllowedApps || state.stats.apps || 0]
     ];
     byId('metricGrid').innerHTML = metrics.map(([label, value]) => (
       `<article class="metric"><span>${safe(label)}</span><strong>${Number(value || 0).toLocaleString()}</strong></article>`
@@ -109,6 +127,7 @@
 
     return state.apps.filter((app) => {
       if (query && !normalized(app.Name).includes(query)) return false;
+      if (isPaidBlocked(app)) return false;
       if (category && app.Category !== category) return false;
       if (installedOnly && !app.Installed) return false;
       if (openSourceOnly && !app.IsOpenSource) return false;
@@ -254,6 +273,7 @@
         const key = normalized(name);
         if (selectedNames.includes(key)) return;
         const app = findApp(name) || { Name: name, IconUrl: '../data/icons/fallback-app.svg', Installed: false };
+        if (isPaidBlocked(app)) return;
         const current = scores.get(key) || { app, score: 0, count: 0 };
         current.score += Number(workflow.RankScore || 0);
         if (app.Installed) current.score += 25;
@@ -274,6 +294,12 @@
     document.querySelectorAll('.suggestion').forEach((button) => {
       button.addEventListener('click', () => toggleApp(button.dataset.app));
     });
+  }
+
+  function renderWorkflowSuggestions() {
+    const suggestions = state.suggestions && state.suggestions.length ? state.suggestions : state.integrations.slice(0, 12);
+    byId('workflowSuggestionGrid').innerHTML = suggestions.length ? suggestions.map(workflowCard).join('') : '<p class="muted">No workflow suggestions available. Refresh dashboard state to import integration templates.</p>';
+    wireWorkflowButtons();
   }
 
   function updateBuilder() {
@@ -407,6 +433,7 @@
       ['Destructive actions', state.safety.destructiveActionsEnabled ? 'Enabled' : 'Disabled', 'ok'],
       ['Dangerous UI actions', state.safety.dangerousButtonsPreviewOnly ? 'Preview only' : 'Needs review', 'ok'],
       ['Credential storage', state.safety.credentialsStored ? 'Review needed' : 'None', 'ok'],
+      ['Cost policy', state.safety.paidOrTrialBlocked ? 'No paid or trials' : 'Needs review', 'ok'],
       ['Dataset files', `${state.datasets.filter((item) => item.Exists).length} present`, 'info']
     ].map(([title, value, type]) => `<article class="workflowCard"><h4>${safe(title)}</h4><div class="workflowMeta">${badge(value, type)}</div></article>`).join('');
 
@@ -481,6 +508,7 @@
     renderSlots();
     renderIntegrations();
     renderSuggestions();
+    renderWorkflowSuggestions();
     renderGoalResults();
     renderSignIn();
     renderRiskAndSettings();

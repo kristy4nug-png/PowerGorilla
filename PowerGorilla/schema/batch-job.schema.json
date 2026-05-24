@@ -1,0 +1,154 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "gorilla/batch-job/v1",
+  "title": "Batch Job Definition",
+  "description": "Configuration for bulk processing of up to 400,000+ items through Ollama",
+  "type": "object",
+  "required": ["batch_id", "batch_name", "total_items", "target_model", "items"],
+  "additionalProperties": false,
+  "properties": {
+    "batch_id": {
+      "type": "string",
+      "pattern": "^batch_[a-zA-Z0-9_]+$",
+      "description": "Unique batch identifier"
+    },
+    "batch_name": {
+      "type": "string",
+      "description": "Human-readable name (e.g., 'Vector embedding 400K prompts')"
+    },
+    "description": {
+      "type": "string",
+      "description": "Detailed description of the batch purpose"
+    },
+    "total_items": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 10000000,
+      "description": "How many items to process"
+    },
+    "target_model": {
+      "type": "string",
+      "description": "Ollama model to use (e.g., 'llama2', 'phi3', 'mistral')"
+    },
+    "items": {
+      "type": "array",
+      "minItems": 1,
+      "description": "Array of queue items to process",
+      "items": {
+        "$ref": "queue-item.schema.json"
+      }
+    },
+    "processing_config": {
+      "type": "object",
+      "properties": {
+        "sequence_only": {
+          "type": "boolean",
+          "default": true,
+          "description": "Process items one-at-a-time (recommended)"
+        },
+        "checkpoint_interval": {
+          "type": "integer",
+          "minimum": 10,
+          "maximum": 10000,
+          "default": 100,
+          "description": "Save checkpoint every N items"
+        },
+        "max_retries": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 10,
+          "default": 3,
+          "description": "Default retry count per item"
+        },
+        "timeout_seconds": {
+          "type": "integer",
+          "minimum": 10,
+          "maximum": 3600,
+          "default": 300,
+          "description": "Max time per Ollama request"
+        },
+        "keep_ollama_alive": {
+          "type": "boolean",
+          "default": true,
+          "description": "Set OLLAMA_KEEP_ALIVE=-1 to lock model in memory"
+        },
+        "ollama_env_vars": {
+          "type": "object",
+          "default": {},
+          "description": "Environment variables to set for Ollama process"
+        }
+      },
+      "default": {}
+    },
+    "priority": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 100,
+      "default": 50,
+      "description": "Batch priority (higher = process first)"
+    },
+    "tags": {
+      "type": "array",
+      "items": { "type": "string" },
+      "default": [],
+      "description": "Labels for filtering (e.g., 'vector-db', 'embeddings', 'critical')"
+    },
+    "notifications": {
+      "type": "object",
+      "properties": {
+        "email_on_complete": {
+          "type": ["string", "null"],
+          "format": "email"
+        },
+        "notify_every_n_items": {
+          "type": ["integer", "null"],
+          "description": "Send progress update every N items"
+        }
+      },
+      "default": {}
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "examples": [
+    {
+      "batch_id": "batch_20260524_embed_400k",
+      "batch_name": "Embed 400K prompts for vector DB",
+      "description": "Generate embeddings for all prompts in the retrieval system",
+      "total_items": 400000,
+      "target_model": "mxbai-embed-large",
+      "items": [
+        {
+          "item_id": "item_embed_001",
+          "sequence_number": 1,
+          "item_type": "embedding",
+          "input_data": {
+            "text": "How to install Windows updates securely?",
+            "embedding_model": "mxbai-embed-large"
+          },
+          "input_schema": "gorilla/embedding-input/v1",
+          "output_schema": "gorilla/embedding-output/v1"
+        }
+      ],
+      "processing_config": {
+        "sequence_only": true,
+        "checkpoint_interval": 1000,
+        "max_retries": 2,
+        "timeout_seconds": 120,
+        "keep_ollama_alive": true,
+        "ollama_env_vars": {
+          "OLLAMA_KEEP_ALIVE": "-1",
+          "OLLAMA_NUM_PARALLEL": "1"
+        }
+      },
+      "priority": 80,
+      "tags": ["vector-db", "embeddings", "batch-critical"],
+      "notifications": {
+        "email_on_complete": "admin@example.com",
+        "notify_every_n_items": 50000
+      }
+    }
+  ]
+}

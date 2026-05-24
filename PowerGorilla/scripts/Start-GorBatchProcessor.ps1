@@ -170,6 +170,18 @@ class SupabaseClient {
       throw
     }
   }
+
+  [void] Insert([string]$table, [hashtable]$data) {
+    $body = $data | ConvertTo-Json -Depth 10
+    $uri = "$($this.Url)/rest/v1/$table"
+    try {
+      Invoke-RestMethod -Uri $uri -Method Post -Body $body `
+        -Headers $this.DefaultHeaders -ErrorAction Stop | Out-Null
+    } catch {
+      Write-Log "Insert error: $_" -Level ERROR
+      throw
+    }
+  }
 }
 
 $supabase = if ($UseLocalQueue) { $null } else { [SupabaseClient]::new($SupabaseUrl, $SupabaseKey) }
@@ -292,7 +304,7 @@ function Invoke-OllamaPromptWithRetry {
     }
 
     $lastError = if ($validation.error) { $validation.error } else { $result.error }
-    Write-Log "Ollama validation failed on attempt $attempt: $lastError" -Level WARN
+    Write-Log "Ollama validation failed on attempt ${attempt}: $lastError" -Level WARN
     if ($attempt -lt $MaxRetries) {
       $totalRetries++
       $sleepSeconds = [Math]::Min(30, 2 * $attempt)
@@ -303,9 +315,41 @@ function Invoke-OllamaPromptWithRetry {
   return @{ success = $false; error = $lastError; raw = $result.raw; attempts = $attempt; retries = ($attempt - 1) }
 }
 
-#============================================================================
-# LOCAL QUEUE PROCESSING LOOP
-#============================================================================
+function Insert-DeadLetterQueueItem {
+  param(
+    [Parameter(Mandatory=$true)]$Item,
+    [Parameter(Mandatory=$true)][string]$ErrorMessage,
+    [Parameter(Mandatory=$true)][int]$Attempts,
+    $RawPayload
+  )
+
+  if ($UseLocalQueue) {
+    return
+  }
+
+  try {
+    $payload = @{
+      dead_letter_id = [guid]::NewGuid().ToString('n')
+      source_item_id = $Item.item_id
+      batch_id = $Item.batch_id
+      item_type = $Item.item_type
+      input_data = $Item.input_data
+      output_data = if ($Item.output_data) { $Item.output_data } else { $null }
+      error_message = $ErrorMessage
+      raw_llm = if ($RawPayload) { $RawPayload } else { $null }
+      attempts = $Attempts
+      first_failed_at = (Get-Date).ToString('o')
+      dead_lettered_at = (Get-Date).ToString('o')
+      created_at = (Get-Date).ToString('o')
+    }
+
+    $supabase.Insert('dead_letter_queue', $payload)
+    Write-Log "Persisted dead-letter item for $($Item.item_id)" -Level INFO
+  } catch {
+    Write-Log "Failed to persist dead-letter item: $_" -Level ERROR
+  }
+}
+
 
 if ($UseLocalQueue) {
   if (-not (Test-Path -LiteralPath $LocalQueuePath)) {

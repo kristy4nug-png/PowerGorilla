@@ -16,6 +16,7 @@
         'Import-PGIntegrationDatasets',
         'Get-PGIntegrationSearch',
         'Get-PGWorkflowSuggestions',
+        'Get-PGSuggestedWorkflows',
         'Get-PGSignInReport',
         'Update-PGIconCache',
         'Invoke-PGCommand',

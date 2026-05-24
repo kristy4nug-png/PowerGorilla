@@ -1,0 +1,203 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "gorilla/app-orchestration/v1",
+  "title": "App Orchestration Pipeline",
+  "description": "Defines how up to 4 apps are chained together with deterministic state management",
+  "type": "object",
+  "required": ["orchestration_id", "app_chain", "initial_payload"],
+  "additionalProperties": false,
+  "properties": {
+    "orchestration_id": {
+      "type": "string",
+      "pattern": "^orch_[a-zA-Z0-9_-]+$",
+      "description": "Unique identifier for this orchestration sequence"
+    },
+    "user_intent": {
+      "type": "string",
+      "description": "The high-level goal, parsed by Ollama (e.g., 'Extract data from Excel and email it')"
+    },
+    "app_chain": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 4,
+      "description": "Apps to orchestrate in sequence",
+      "items": {
+        "type": "object",
+        "required": ["sequence", "app_id", "action", "input_schema", "output_schema"],
+        "properties": {
+          "sequence": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 4,
+            "description": "Execution order"
+          },
+          "app_id": {
+            "type": "string",
+            "description": "Installed app identifier (e.g., 'microsoft-excel', 'outlook')"
+          },
+          "app_name": {
+            "type": "string",
+            "description": "Display name of the app"
+          },
+          "executable_path": {
+            "type": "string",
+            "description": "Full path to the executable"
+          },
+          "action": {
+            "type": "string",
+            "enum": ["open", "query", "edit", "export", "send", "analyze", "transform"],
+            "description": "What to do with this app"
+          },
+          "input_schema": {
+            "type": "string",
+            "description": "Schema for this app's expected input (e.g., 'gorilla/excel-input/v1')"
+          },
+          "output_schema": {
+            "type": "string",
+            "description": "Schema for this app's output"
+          },
+          "automation_type": {
+            "type": "string",
+            "enum": ["pywinauto", "ui-automation", "command-line", "api", "native"],
+            "description": "How to control this app"
+          },
+          "requires_ui": {
+            "type": "boolean",
+            "default": true,
+            "description": "Whether the GUI must be visible or if headless is OK"
+          },
+          "error_handler": {
+            "type": "string",
+            "enum": ["retry", "skip", "fallback", "abort"],
+            "description": "What to do if this step fails"
+          },
+          "fallback_app": {
+            "type": ["string", "null"],
+            "description": "Alternative app_id if this one fails (e.g., LibreOffice instead of Excel)"
+          },
+          "timeout_seconds": {
+            "type": "integer",
+            "minimum": 5,
+            "maximum": 600,
+            "default": 120,
+            "description": "Max time to wait for this step"
+          },
+          "retry_count": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 3,
+            "default": 1
+          }
+        }
+      }
+    },
+    "initial_payload": {
+      "type": "object",
+      "description": "Data to pass to App #1. Structure depends on app_chain[0].input_schema"
+    },
+    "state_checkpoints": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "after_step": { "type": "integer" },
+          "checkpoint_id": { "type": "string" },
+          "data_snapshot": { "type": "object" }
+        }
+      },
+      "default": [],
+      "description": "Snapshots of state after each step (for resumability)"
+    },
+    "execution_config": {
+      "type": "object",
+      "properties": {
+        "parallel_allowed": {
+          "type": "boolean",
+          "default": false,
+          "description": "Whether steps can run concurrently (not recommended)"
+        },
+        "human_in_loop": {
+          "type": "boolean",
+          "default": false,
+          "description": "Pause after each step for user review"
+        },
+        "verbose_logging": {
+          "type": "boolean",
+          "default": false
+        },
+        "ollama_model": {
+          "type": "string",
+          "default": "llama2",
+          "description": "Model for decision-making between steps"
+        }
+      },
+      "default": {}
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "started_at": {
+      "type": ["string", "null"],
+      "format": "date-time"
+    },
+    "completed_at": {
+      "type": ["string", "null"],
+      "format": "date-time"
+    },
+    "status": {
+      "type": "string",
+      "enum": ["pending", "running", "paused", "completed", "failed", "aborted"],
+      "default": "pending"
+    }
+  },
+  "examples": [
+    {
+      "orchestration_id": "orch_extract_and_email_20260524",
+      "user_intent": "Extract sales data from Excel and email it to the team",
+      "app_chain": [
+        {
+          "sequence": 1,
+          "app_id": "microsoft-excel",
+          "app_name": "Microsoft Excel",
+          "executable_path": "C:\\Program Files\\Microsoft Office\\root\\Office16\\EXCEL.EXE",
+          "action": "query",
+          "input_schema": "gorilla/excel-input/v1",
+          "output_schema": "gorilla/excel-output/v1",
+          "automation_type": "pywinauto",
+          "requires_ui": true,
+          "error_handler": "fallback",
+          "fallback_app": "libre-office-calc",
+          "timeout_seconds": 120,
+          "retry_count": 1
+        },
+        {
+          "sequence": 2,
+          "app_id": "outlook",
+          "app_name": "Microsoft Outlook",
+          "executable_path": "C:\\Program Files\\Microsoft Office\\root\\Office16\\OUTLOOK.EXE",
+          "action": "send",
+          "input_schema": "gorilla/outlook-input/v1",
+          "output_schema": "gorilla/outlook-output/v1",
+          "automation_type": "pywinauto",
+          "requires_ui": false,
+          "error_handler": "retry",
+          "timeout_seconds": 60,
+          "retry_count": 2
+        }
+      ],
+      "initial_payload": {
+        "file_path": "C:\\Users\\Chris\\Sales_Data.xlsx",
+        "sheet_name": "Q2_Results",
+        "range": "A1:F50",
+        "extract_format": "json"
+      },
+      "execution_config": {
+        "parallel_allowed": false,
+        "human_in_loop": false,
+        "verbose_logging": true,
+        "ollama_model": "llama2"
+      }
+    }
+  ]
+}

@@ -1,87 +1,86 @@
-# PowerShell Gorilla 🦍
+# Bad Gorrilla
 
-Local-first Windows command centre with a React Native web app, Supabase + pgvector database, Ollama AI extraction, and Vercel deployment.
+<img src="PowerGorilla/docs/assets/bad-gorrilla-logo.png" alt="Bad Gorrilla logo" width="180">
 
-## Stack
+Bad Gorrilla is now consolidated into one app folder: `PowerGorilla`.
 
-| Layer | Technology |
+It is a local-first Windows command centre for app inventory, visual workflow search, Ollama-backed JSON schema processing, safe dry-run system checks, and optional free-tier Supabase/Expo sync.
+
+## Product Rules
+
+- Local-first by default.
+- No paid subscriptions, paid APIs, trials, premium plans, or commercial-only tools.
+- Free, open-source, built-in Windows tools, and free-tier services are allowed.
+- Supabase, Cloudflare Pages, GitHub Pages, and Expo are optional free-tier pieces; the PowerShell dashboard runs locally without them.
+
+## Main Paths
+
+| Path | Purpose |
 |---|---|
-| Local engine | PowerShell 7 (CommandUnitGorrilla + PowerGorilla modules) |
-| AI extraction | Ollama (llama3.2 for JSON, nomic-embed-text for vectors) |
-| Database | Supabase (Postgres 15 + pgvector) |
-| Web app | React Native Expo Web → expo-router |
-| Deployment | Vercel (auto-deploy from GitHub) |
-| Source control | GitHub — `powershell-gorrilla` |
+| `PowerGorilla/Start-PowerGorilla.ps1` | Local dashboard launcher |
+| `PowerGorilla/scripts/Setup-PowerGorilla.ps1` | Setup and data refresh |
+| `PowerGorilla/scripts/Validate-PowerGorilla.ps1` | Validation checks |
+| `PowerGorilla/frontend` | Expo web app |
+| `PowerGorilla/schema` | JSON schemas |
+| `PowerGorilla/supabase/migrations` | Optional free-tier Supabase migrations |
+| `PowerGorilla/docs` | Architecture and build notes |
 
-## Quick Start
+## Run Local Dashboard
 
-### 1. Set up Supabase
-1. Create a project at [supabase.com](https://supabase.com)
-2. Go to **SQL Editor** and run `supabase/migrations/001_init.sql`
-3. Copy your Project URL and API keys from **Settings → API**
-
-### 2. Configure PowerShell
-Edit `PowerGorilla/.env.ps1` with your Supabase keys, then run:
 ```powershell
-Import-Module .\PowerGorilla\modules\PowerGorilla\PowerGorilla.Supabase.psm1
-
-# Push your app inventory to Supabase
-gorjson | gorpush -Type apps
-
-# Extract workflows from CSVs using Ollama (batched, no thousands of commands)
-gorextract -Path .\PowerGorilla\data\imports\Two_App_20K_Free_OpenSource_Combinations.csv -Type workflow -OutDir .\PowerGorilla\data\processed
-
-# Generate pgvector embeddings
-gorembed -Type apps
-gorembed -Type workflows
-
-# Semantic search
-gorsemantic "automate video editing"
+cd .\PowerGorilla
+.\Start-PowerGorilla.ps1
 ```
 
-### 3. Run the web app locally
+The local dashboard opens at:
+
+```text
+http://127.0.0.1:8765/
+```
+
+## Run Expo Frontend
+
 ```powershell
-cd gorilla-app
-# Create .env.local with your Supabase URL and anon key
+cd .\PowerGorilla\frontend
 npm run web
 ```
 
-### 4. Deploy to Vercel
-1. Push to GitHub
-2. Connect repo at [vercel.com](https://vercel.com)
-3. Add secrets: `EXPO_PUBLIC_SUPABASE_URL`, `EXPO_PUBLIC_SUPABASE_ANON_KEY`, `VERCEL_TOKEN`, `VERCEL_ORG_ID`, `VERCEL_PROJECT_ID`
-4. Every push to `main` auto-deploys
+Create `PowerGorilla/frontend/.env.local` from `PowerGorilla/frontend/.env.example` only if you are using the optional Supabase free tier.
 
-## Screens
+For the fastest Supabase-backed frontend, apply all SQL files in `PowerGorilla/supabase/migrations`, including `004_frontend_performance.sql`. The Expo app caches public reads, debounces search input, and forces a fresh read only when the user refreshes.
 
-| Screen | Path | Description |
-|---|---|---|
-| Dashboard | `/` | Stats, vector DB metrics, audit log |
-| Apps | `/apps` | App inventory with filters and infinite scroll |
-| Workflows | `/workflows` | Visual workflow builder with rank scores |
-| Semantic Search | `/search` | Ollama + pgvector cosine similarity search |
-| Sessions | `/sessions` | Append-only audit log from PowerShell |
+## Ollama JSON Schema Layer
 
-## PowerShell Commands
+Ollama is the local intelligence layer for large JSON schema work. Keep extraction, enrichment, and validation local first; push only validated app/workflow records to Supabase for fast read-only demos.
 
-| Command | Description |
-|---|---|
-| `gorjson` | Emit app inventory as schema-valid JSON |
-| `gorextract` | Batch CSV extraction via Ollama (no per-row loops) |
-| `gorpush` | Push records to Supabase (upsert in batches) |
-| `gorembed` | Generate Ollama embeddings → Supabase pgvector |
-| `gorsemantic` | Semantic vector search from PowerShell |
+## Validate
 
-## JSON Schemas
+Fast GitHub/package validation:
 
-All data validated against strict schemas in `/schema/`:
-- `app.schema.json` — `gorilla/app/v1`
-- `workflow.schema.json` — `gorilla/workflow/v1`
-- `extraction.schema.json` — `gorilla/ollama-extraction/v1`
+```powershell
+.\PowerGorilla\scripts\Validate-PowerGorilla.ps1 -Root .\PowerGorilla -StaticOnly
+```
 
-## Safety
+Local runtime validation:
 
-- No destructive system action from the dashboard
-- No credentials stored in the app
-- All PowerShell actions logged to Supabase `audit_log`
-- Large CSVs (350MB) stay local — never committed to Git
+```powershell
+.\PowerGorilla\scripts\Validate-PowerGorilla.ps1 -Root .\PowerGorilla
+```
+
+Supabase-backed validation:
+
+```powershell
+.\PowerGorilla\scripts\Validate-PowerGorilla.ps1 -Root .\PowerGorilla -UseSupabase
+```
+
+Deep local data refresh validation:
+
+```powershell
+.\PowerGorilla\scripts\Validate-PowerGorilla.ps1 -Root .\PowerGorilla -RefreshData
+```
+
+`-RefreshData` regenerates local dashboard data from this machine. Review `PowerGorilla/ui/app-data.js` before committing after a refresh.
+
+## Backup Policy
+
+Only one current source backup is kept under `backups/`. Older backups are removed after a new backup is created.

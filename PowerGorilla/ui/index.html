@@ -3,16 +3,16 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Power Gorilla</title>
+  <title>Bad Gorrilla</title>
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
   <div class="appShell">
-    <aside class="sideNav" aria-label="Power Gorilla sections">
+    <aside class="sideNav" aria-label="Bad Gorrilla sections">
       <div class="brandBlock">
-        <div class="brandMark">PG</div>
+        <img class="brandMark" src="assets/bad-gorrilla-icon.png" alt="Bad Gorrilla logo">
         <div>
-          <h1>Power Gorilla</h1>
+          <h1>Bad Gorrilla</h1>
           <span id="safeMode">Strict Safe Mode</span>
         </div>
       </div>
@@ -36,6 +36,7 @@
           <span class="eyebrow">Local Windows command centre</span>
           <h2>App combinations, safe previews, and read-only system intelligence</h2>
         </div>
+        <img class="topBrandImage" src="assets/bad-gorrilla-logo.png" alt="" aria-hidden="true">
         <div class="topActions">
           <button class="btn secondary" id="refreshBtn" type="button">Refresh Data</button>
           <button class="btn primary" id="exportStateBtn" type="button">Export State</button>
@@ -54,6 +55,13 @@
           </div>
         </div>
         <div class="metricGrid" id="metricGrid"></div>
+        <div class="sectionHead">
+          <div>
+            <h4>Suggested Workflows</h4>
+            <p>What Power Gorilla can do next based on your installed apps and imported workflow templates.</p>
+          </div>
+        </div>
+        <div id="workflowSuggestionGrid" class="cardGrid"></div>
       </section>
 
       <section id="inventory" class="section">
@@ -69,7 +77,7 @@
           <select id="categoryFilter" class="input"></select>
           <label class="check"><input id="installedOnly" type="checkbox"> Installed only</label>
           <label class="check"><input id="openSourceOnly" type="checkbox"> Open-source</label>
-          <label class="check"><input id="freeOnly" type="checkbox"> Free/free-tier</label>
+          <label class="check"><input id="freeOnly" type="checkbox"> Free/free-tier only</label>
           <label class="check"><input id="localOnly" type="checkbox"> Local mode</label>
         </div>
         <div id="appGrid" class="appGrid"></div>

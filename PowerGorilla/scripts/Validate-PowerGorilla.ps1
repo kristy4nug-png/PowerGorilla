@@ -6,13 +6,28 @@
 
 [CmdletBinding()]
 param(
-    [string]$Root = (Split-Path -Parent $PSScriptRoot),
+    [string]$Root,
+    [switch]$StaticOnly,
+    [switch]$UseSupabase,
     [switch]$RefreshData,
     [switch]$ExtractIcons
 )
 
 $ErrorActionPreference = 'Continue'
 Set-StrictMode -Version 2.0
+
+if ([string]::IsNullOrEmpty($Root)) {
+    if ($PSScriptRoot) {
+        $Root = Split-Path -Parent $PSScriptRoot
+    } else {
+        $scriptPath = $MyInvocation.MyCommand.Path
+        if ($scriptPath) {
+            $Root = Split-Path -Parent (Split-Path -Parent $scriptPath)
+        } else {
+            $Root = (Get-Location).Path
+        }
+    }
+}
 
 function Add-Check {
     param(
@@ -45,29 +60,46 @@ $rootPath = (Resolve-Path -LiteralPath $Root).Path
 $moduleManifest = Join-Path $rootPath 'modules\PowerGorilla\PowerGorilla.psd1'
 $reportDir = Join-Path $rootPath 'reports'
 $script:checks = @()
-$steps = @(
-    'Folder structure',
-    'Module manifest',
-    'Module import',
-    'Dataset files',
-    'CSV parse',
-    'Data refresh',
-    'Dashboard files',
-    'Dashboard state',
-    'Icon cache',
-    'Integration search',
-    'Sign-in report',
-    'Dry-run command engine',
-    'No destructive UI actions',
-    'Report write'
-)
+$steps = @('Folder structure','Module manifest','Module import','Dashboard files','Schema files','Supabase migrations','Brand assets','Dry-run command engine','No destructive UI actions','Report write')
+if (-not $StaticOnly) {
+    $steps = @(
+        'Folder structure',
+        'Module manifest',
+        'Module import',
+        'Dataset files',
+        'CSV parse',
+        'Data refresh',
+        'Dashboard files',
+        'Dashboard state',
+        'Icon cache',
+        'Integration search',
+        'Sign-in report',
+        'Dry-run command engine',
+        'No destructive UI actions',
+        'Report write'
+    )
+}
+if ($UseSupabase) {
+    $reportIndex = [array]::IndexOf($steps, 'Report write')
+    if ($reportIndex -ge 0) {
+        $before = if ($reportIndex -gt 0) { $steps[0..($reportIndex - 1)] } else { @() }
+        $after = $steps[$reportIndex..($steps.Count - 1)]
+        $steps = @($before + 'Supabase connectivity' + $after)
+    } else {
+        $steps = @($steps + 'Supabase connectivity')
+    }
+}
 
 for ($i = 0; $i -lt $steps.Count; $i++) {
     Write-Progress -Activity 'Power Gorilla validation' -Status $steps[$i] -PercentComplete ([int](($i / $steps.Count) * 100))
     switch ($steps[$i]) {
         'Folder structure' {
             Invoke-Check 'Required folders exist' {
-                $required = @('app','data','data\imports','data\processed','data\icons','logs','modules\PowerGorilla','reports','scripts','ui','backups','docs')
+                $required = if ($StaticOnly) {
+                    @('modules\PowerGorilla','scripts','ui','docs','schema','supabase\migrations','frontend')
+                } else {
+                    @('app','data','data\imports','data\processed','data\icons','logs','modules\PowerGorilla','reports','scripts','ui','backups','docs')
+                }
                 $missing = @($required | Where-Object { -not (Test-Path -LiteralPath (Join-Path $rootPath $_)) })
                 if ($missing.Count) { throw "Missing folders: $($missing -join ', ')" }
                 'All required folders exist.'
@@ -97,7 +129,7 @@ for ($i = 0; $i -lt $steps.Count; $i++) {
             Invoke-Check 'CSV imports parse first rows' {
                 $paths = @(Get-PGDatasetStatus -Root $rootPath | Where-Object { $_.Exists -and $_.CombinationSize -gt 1 } | Select-Object -ExpandProperty Path)
                 foreach ($path in $paths) {
-                    $row = Import-Csv -LiteralPath $path | Select-Object -First 1
+                    $row = Get-Content -LiteralPath $path -TotalCount 2 | ConvertFrom-Csv | Select-Object -First 1
                     if (-not $row) { throw "No row parsed from $path" }
                 }
                 "$($paths.Count) CSV files parsed."
@@ -117,6 +149,32 @@ for ($i = 0; $i -lt $steps.Count; $i++) {
                 $missing = @($files | Where-Object { -not (Test-Path -LiteralPath (Join-Path $rootPath $_)) })
                 if ($missing.Count) { throw "Missing UI files: $($missing -join ', ')" }
                 'Dashboard files exist.'
+            }
+        }
+        'Schema files' {
+            Invoke-Check 'JSON schemas exist and parse' {
+                $files = @('schema\app.schema.json','schema\workflow.schema.json','schema\extraction.schema.json')
+                $missing = @($files | Where-Object { -not (Test-Path -LiteralPath (Join-Path $rootPath $_)) })
+                if ($missing.Count) { throw "Missing schema files: $($missing -join ', ')" }
+                foreach ($file in $files) {
+                    Get-Content -LiteralPath (Join-Path $rootPath $file) -Raw | ConvertFrom-Json | Out-Null
+                }
+                'Schema files parse.'
+            }
+        }
+        'Supabase migrations' {
+            Invoke-Check 'Supabase migrations are present' {
+                $migrations = @(Get-ChildItem -LiteralPath (Join-Path $rootPath 'supabase\migrations') -Filter '*.sql' -File -ErrorAction Stop)
+                if ($migrations.Count -lt 1) { throw 'No Supabase migrations found.' }
+                "$($migrations.Count) Supabase migrations found."
+            }
+        }
+        'Brand assets' {
+            Invoke-Check 'Bad Gorrilla brand assets exist' {
+                $files = @('assets\bad-gorrilla-logo.png','assets\bad-gorrilla-icon.png','assets\gorrilla-launcher.ico','ui\assets\bad-gorrilla-logo.png','frontend\assets\icon.png','frontend\assets\favicon.png')
+                $missing = @($files | Where-Object { -not (Test-Path -LiteralPath (Join-Path $rootPath $_)) })
+                if ($missing.Count) { throw "Missing brand assets: $($missing -join ', ')" }
+                'Brand assets exist.'
             }
         }
         'Dashboard state' {
@@ -169,6 +227,29 @@ for ($i = 0; $i -lt $steps.Count; $i++) {
                 'UI launch action is preview-only.'
             }
         }
+        'Supabase connectivity' {
+            Invoke-Check 'Supabase dashboard_stats reads' {
+                $supabaseModule = Join-Path $rootPath 'modules\PowerGorilla\PowerGorilla.Supabase.psm1'
+                if (-not (Test-Path -LiteralPath $supabaseModule)) { throw 'Supabase extension module missing.' }
+
+                Import-Module $supabaseModule -Force | Out-Null
+                $config = Get-GorSupabaseConfig
+                $key = if ($config.AnonKey) { $config.AnonKey } else { $config.ServiceKey }
+                if ([string]::IsNullOrWhiteSpace($config.Url) -or [string]::IsNullOrWhiteSpace($key)) {
+                    throw 'Supabase URL/key not configured. Create PowerGorilla\.env.ps1 locally.'
+                }
+
+                $headers = @{
+                    apikey = $key
+                    Authorization = "Bearer $key"
+                }
+                $stats = @(Invoke-RestMethod -Uri "$($config.Url)/rest/v1/dashboard_stats?select=*&limit=1" -Headers $headers -TimeoutSec 20 -ErrorAction Stop)
+                if ($stats.Count -lt 1) { throw 'Supabase dashboard_stats returned no rows.' }
+                $row = $stats[0]
+                $writeMode = if ($config.ServiceKey) { 'service key configured for local writes' } else { 'read-only anon key configured; service key not present' }
+                "Supabase read ok. Apps: $($row.total_apps), workflows: $($row.total_workflows); $writeMode."
+            }
+        }
         'Report write' {
             Invoke-Check 'Validation report folder writable' {
                 New-Item -ItemType Directory -Path $reportDir -Force | Out-Null
@@ -185,7 +266,7 @@ $failed = @($script:checks | Where-Object { -not $_.passed }).Count
 $status = if ($failed -eq 0) { 'Completed' } else { 'Failed Safely' }
 $outcome = [ordered]@{
     timestamp = (Get-Date).ToString('o')
-    task = 'Validate Power Gorilla Phase 1'
+    task = if ($StaticOnly) { 'Validate Bad Gorrilla static GitHub package' } elseif ($UseSupabase) { 'Validate Bad Gorrilla Phase 1 with Supabase' } else { 'Validate Bad Gorrilla Phase 1' }
     projectPath = $rootPath
     finalStatus = $status
     checked = $script:checks.Count
