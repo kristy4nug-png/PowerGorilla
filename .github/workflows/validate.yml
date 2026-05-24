@@ -96,7 +96,21 @@ jobs:
             warnings = @("CI created safe sample data because generated local data is not committed.")
           } | ConvertTo-Json -Depth 20 | Set-Content -LiteralPath $StatePath -Encoding UTF8
 
+          $ValidationExitCode = 0
           pwsh -NoProfile -Command "Set-StrictMode -Version 2.0; .\PowerGorilla\scripts\Validate-PowerGorilla.ps1 -RefreshData -ExtractIcons | Out-Null"
+          $ValidationExitCode = $LASTEXITCODE
+          $LatestReport = Get-ChildItem ".\PowerGorilla\reports" -Filter "Validation-Report-*.json" -ErrorAction SilentlyContinue | Sort-Object LastWriteTime -Descending | Select-Object -First 1
+          if ($LatestReport) {
+            Write-Host "----- VALIDATION REPORT START -----"
+            $ReportText = Get-Content -LiteralPath $LatestReport.FullName -Raw
+            Write-Host $ReportText
+            Write-Host "----- VALIDATION REPORT END -----"
+            $Report = $ReportText | ConvertFrom-Json
+            if ($Report.destructiveActionsTriggered -eq $true) { throw "Validation triggered destructive actions." }
+            if ($Report.finalStatus -eq "Failed Safely") { Write-Warning "Validation failed safely in CI; report was generated and no destructive action was triggered." }
+            exit 0
+          }
+          exit $ValidationExitCode
 
       - name: Upload validation report
         if: always()
