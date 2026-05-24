@@ -21,6 +21,7 @@ It is a local-first Windows command centre for app inventory, visual workflow se
 | `PowerGorilla/scripts/Setup-PowerGorilla.ps1` | Setup and data refresh |
 | `PowerGorilla/scripts/Validate-PowerGorilla.ps1` | Validation checks |
 | `PowerGorilla/frontend` | Expo web app |
+| `PowerGorilla/site` | Free static promotional website |
 | `PowerGorilla/schema` | JSON schemas |
 | `PowerGorilla/supabase/migrations` | Optional free-tier Supabase migrations |
 | `PowerGorilla/docs` | Architecture and build notes |

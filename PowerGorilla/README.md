@@ -16,6 +16,7 @@ Phat Gorrilla is a PowerShell-first, local-first Windows command centre for app 
 - Local PowerShell app under `PowerGorilla`
 - Dashboard under `ui`
 - Expo frontend under `frontend`
+- Free promotional website under `site`
 - JSON schemas under `schema`
 - Optional Supabase migrations under `supabase/migrations`
 - Dataset imports under `data/imports`
