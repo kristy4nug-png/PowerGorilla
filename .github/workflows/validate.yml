@@ -1,6 +1,7 @@
 name: Validate PowerGorilla
 
 on:
+  workflow_dispatch:
   pull_request:
   push:
     branches:
@@ -33,26 +34,36 @@ jobs:
             New-Item -ItemType Directory -Force -Path $Folder | Out-Null
           }
 
-          Set-Content -LiteralPath ".\PowerGorilla\data\imports\ci-audio-design.csv" -Encoding UTF8 -Value @(
-            "Name,Category,Type,LaunchUrl,Description,IconExtracted,SafeToLaunch,Workflow",
-            "Audacity,Audio,desktop,,Audio editor,true,true,Audacity + Blender",
-            "Blender,Design,desktop,,3D creation suite,true,true,Audacity + Blender"
+          Set-Content -LiteralPath ".\PowerGorilla\data\imports\Proper_Apps_Shortlist.csv" -Encoding UTF8 -Value @(
+            "Name,Category,Installed,IsOpenSource,IsFreeOrFreeTier,LocalMode,SignInMode,IconUrl,IconExtracted",
+            "Audacity,Audio,true,true,true,Local mode available,No sign-in needed,../data/icons/fallback-app.svg,true",
+            "Blender,Design,true,true,true,Local mode available,No sign-in needed,../data/icons/fallback-app.svg,true",
+            "age,Security,true,true,true,Local mode available,No sign-in needed,../data/icons/fallback-app.svg,true",
+            "BleachBit,Cleanup,true,true,true,Local mode available,No sign-in needed,../data/icons/fallback-app.svg,true",
+            "7-Zip,Archive,true,true,true,Local mode available,No sign-in needed,../data/icons/fallback-app.svg,true",
+            "LibreOffice,Office,true,true,true,Local mode available,No sign-in needed,../data/icons/fallback-app.svg,true",
+            "GitHub,Development,true,false,true,Cloud-assisted,Sign-in optional,../data/icons/fallback-app.svg,true",
+            "Vercel,Frontend,true,false,true,Cloud-assisted,Sign-in optional,../data/icons/fallback-app.svg,true",
+            "Supabase,Backend,true,false,true,Cloud-assisted,Sign-in required,../data/icons/fallback-app.svg,true",
+            "Ollama,AI,true,true,true,Local mode available,No sign-in needed,../data/icons/fallback-app.svg,true"
           )
 
-          Set-Content -LiteralPath ".\PowerGorilla\data\imports\ci-dev-frontend.csv" -Encoding UTF8 -Value @(
-            "Name,Category,Type,LaunchUrl,Description,IconExtracted,SafeToLaunch,Workflow",
-            "GitHub,Development,online,https://github.com,Code hosting,true,true,GitHub + Vercel",
-            "Vercel,Frontend,online,https://vercel.com,Frontend hosting,true,true,GitHub + Vercel"
+          Set-Content -LiteralPath ".\PowerGorilla\data\imports\Two_App_20K_Free_OpenSource_Combinations.csv" -Encoding UTF8 -Value @(
+            "App1,App2,Workflow Name,Description,Category,Difficulty,Risk,Automation",
+            "Audacity,Blender,Audacity + Blender,Create audio-reactive 3D content using local open tools,Audio Design,Easy,Low,Automation-ready",
+            "GitHub,Vercel,GitHub + Vercel,Deploy frontend changes from source control,Development Frontend,Easy,Low,Automation-ready"
           )
 
-          Set-Content -LiteralPath ".\PowerGorilla\data\imports\ci-workflow-samples.csv" -Encoding UTF8 -Value @(
-            "Name,Category,Type,LaunchUrl,Description,IconExtracted,SafeToLaunch,Workflow",
-            "Supabase,Backend,online,https://supabase.com,Backend platform,true,true,Supabase + Ollama + JSON",
-            "Ollama,AI,local,http://localhost:11434,Local AI runtime,true,true,Supabase + Ollama + JSON",
-            "age,Security,desktop,,Encryption tool,true,true,age + BleachBit + 7-Zip",
-            "BleachBit,Cleanup,desktop,,System cleaner,true,true,age + BleachBit + 7-Zip",
-            "7-Zip,Archive,desktop,,Archive manager,true,true,age + BleachBit + 7-Zip",
-            "LibreOffice,Office,desktop,,Office suite,true,true,age + Audacity + 7-Zip + LibreOffice"
+          Set-Content -LiteralPath ".\PowerGorilla\data\imports\Three_App_200K_Free_OpenSource_Integrations.csv" -Encoding UTF8 -Value @(
+            "App1,App2,App3,Workflow Name,Description,Category,Difficulty,Risk,Automation",
+            "age,BleachBit,7-Zip,age + BleachBit + 7-Zip,Compress clean and encrypt local project packages safely,Security Cleanup,Easy,Low,Automation-ready",
+            "Supabase,Ollama,GitHub,Supabase + Ollama + GitHub,Build strict JSON app intelligence with source control and backend storage,Backend AI,Easy,Low,Automation-ready"
+          )
+
+          Set-Content -LiteralPath ".\PowerGorilla\data\imports\Four_App_400K_Free_OpenSource_Integrations.csv" -Encoding UTF8 -Value @(
+            "App1,App2,App3,App4,Workflow Name,Description,Category,Difficulty,Risk,Automation",
+            "age,Audacity,7-Zip,LibreOffice,age + Audacity + 7-Zip + LibreOffice,Prepare media documents compress assets and encrypt final packages,Security Media Office,Easy,Low,Automation-ready",
+            "GitHub,Vercel,Supabase,Ollama,GitHub + Vercel + Supabase + Ollama,Deploy a frontend backed by Supabase with local AI command generation,Full Stack AI,Easy,Low,Automation-ready"
           )
 
           $StatePath = ".\PowerGorilla\data\processed\dashboard-state.json"
@@ -69,22 +80,16 @@ jobs:
             apps = @(
               @{ name = "Audacity"; category = "Audio"; type = "desktop"; IconExtracted = $true; safeToLaunch = $true },
               @{ name = "Blender"; category = "Design"; type = "desktop"; IconExtracted = $true; safeToLaunch = $true },
-              @{ name = "GitHub"; category = "Development"; type = "online"; launchUrl = "https://github.com"; IconExtracted = $true; safeToLaunch = $true },
-              @{ name = "Vercel"; category = "Frontend"; type = "online"; launchUrl = "https://vercel.com"; IconExtracted = $true; safeToLaunch = $true },
-              @{ name = "Supabase"; category = "Backend"; type = "online"; launchUrl = "https://supabase.com"; IconExtracted = $true; safeToLaunch = $true },
-              @{ name = "Ollama"; category = "AI"; type = "local"; launchUrl = "http://localhost:11434"; IconExtracted = $true; safeToLaunch = $true },
               @{ name = "age"; category = "Security"; type = "desktop"; IconExtracted = $true; safeToLaunch = $true },
               @{ name = "BleachBit"; category = "Cleanup"; type = "desktop"; IconExtracted = $true; safeToLaunch = $true },
               @{ name = "7-Zip"; category = "Archive"; type = "desktop"; IconExtracted = $true; safeToLaunch = $true },
               @{ name = "LibreOffice"; category = "Office"; type = "desktop"; IconExtracted = $true; safeToLaunch = $true }
             )
-            workflows = @(
-              @{ name = "Audacity + Blender"; apps = @("Audacity", "Blender"); safeToLaunch = $true },
-              @{ name = "GitHub + Vercel"; apps = @("GitHub", "Vercel"); safeToLaunch = $true },
-              @{ name = "age + BleachBit + 7-Zip"; apps = @("age", "BleachBit", "7-Zip"); safeToLaunch = $true },
-              @{ name = "age + Audacity + 7-Zip + LibreOffice"; apps = @("age", "Audacity", "7-Zip", "LibreOffice"); safeToLaunch = $true }
+            integrations = @(
+              @{ name = "Audacity + Blender"; AppNames = @("Audacity", "Blender"); CombinationSize = 2; safeToLaunch = $true },
+              @{ name = "age + BleachBit + 7-Zip"; AppNames = @("age", "BleachBit", "7-Zip"); CombinationSize = 3; safeToLaunch = $true },
+              @{ name = "age + Audacity + 7-Zip + LibreOffice"; AppNames = @("age", "Audacity", "7-Zip", "LibreOffice"); CombinationSize = 4; safeToLaunch = $true }
             )
-            integrations = @()
             commands = @()
             icons = @()
             categories = @("Audio", "Design", "Development", "Frontend", "Backend", "AI", "Security", "Cleanup", "Archive", "Office")
