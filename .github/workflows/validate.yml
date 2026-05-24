@@ -17,6 +17,22 @@ jobs:
       - name: Run validation
         shell: pwsh
         run: |
+          $StatePath = ".\PowerGorilla\data\processed\dashboard-state.json"
+          $StateDir = Split-Path -Parent $StatePath
+          New-Item -ItemType Directory -Force -Path $StateDir | Out-Null
+          if (-not (Test-Path -LiteralPath $StatePath)) {
+            @{
+              generatedAt = (Get-Date).ToString("o")
+              source = "github-actions-ci"
+              apps = @()
+              integrations = @()
+              commands = @()
+              icons = @()
+              categories = @()
+              warnings = @("CI created a safe empty dashboard-state.json because generated local data is not committed.")
+            } | ConvertTo-Json -Depth 10 | Set-Content -LiteralPath $StatePath -Encoding UTF8
+          }
+          
           pwsh -NoProfile -Command "Set-StrictMode -Version 2.0; .\PowerGorilla\scripts\Validate-PowerGorilla.ps1 -RefreshData -ExtractIcons | Out-Null"
 
       - name: Upload validation report
