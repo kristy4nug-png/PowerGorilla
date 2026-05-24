@@ -1,15 +1,16 @@
-# PowerShell Gorilla — Git Ignore
+# PowerShell Gorrilla — Git Ignore
 
-# ─── Large data files (stay local, processed by Ollama into Supabase) ───
+# Large data files
 PowerGorilla/data/imports/*.csv
 PowerGorilla/data/imports/*.CSV
 *.csv
 *.CSV
 
-# ─── Processed/generated local data (rebuilt by PowerShell) ───
+# Processed/generated local data
 PowerGorilla/data/processed/
 PowerGorilla/data/icons/*.png
 PowerGorilla/data/icons/*.ico
+PowerGorilla/ui/app-data.json
 PowerGorilla/logs/
 PowerGorilla/backups/
 PowerGorilla/reports/
@@ -17,39 +18,40 @@ logs/
 backups/
 reports/
 
-# ─── Secrets and env files ───
+# Secrets and env files
 .env
 .env.local
 .env.*.local
 *.env
 supabase/.env
-gorilla-app/.env
-gorilla-app/.env.local
+PowerGorilla/.env.ps1
+PowerGorilla/frontend/.env
+PowerGorilla/frontend/.env.local
 
-# ─── Node / Expo ───
+# Node / frontend
 node_modules/
-gorilla-app/node_modules/
-gorilla-app/.expo/
-gorilla-app/dist/
-gorilla-app/web-build/
-gorilla-app/.cache/
-gorilla-app/expo-env.d.ts
+PowerGorilla/frontend/node_modules/
+PowerGorilla/frontend/.expo/
+PowerGorilla/frontend/dist/
+PowerGorilla/frontend/web-build/
+PowerGorilla/frontend/.cache/
+PowerGorilla/frontend/expo-env.d.ts
 
-# ─── Windows ───
+# Windows
 Thumbs.db
 Desktop.ini
 *.lnk
 
-# ─── PowerShell ───
+# PowerShell / Visual Studio
 *.pssproj
 *.suo
 .vs/
 
-# ─── Editor ───
+# Editor
 .vscode/settings.json
 .idea/
 *.swp
 *~
 
-# ─── OS ───
+# OS
 .DS_Store
