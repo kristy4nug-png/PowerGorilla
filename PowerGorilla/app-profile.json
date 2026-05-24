@@ -1,0 +1,10 @@
+{
+  "Name": "Phat Gorrilla",
+  "Type": "Launchers",
+  "Section": "Development",
+  "Purpose": "Local-first Windows command centre for safe app inventory, workflow search, Ollama JSON schema work, and optional Supabase sync.",
+  "Quality": "Public preview",
+  "LaunchPath": "C:\\Program Files\\PowerShell\\7\\pwsh.exe",
+  "OriginalPath": "",
+  "Updated": "2026-05-24T00:00:00+01:00"
+}

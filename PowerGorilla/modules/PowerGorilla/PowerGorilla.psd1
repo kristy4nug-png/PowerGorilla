@@ -2,7 +2,7 @@
     RootModule = 'PowerGorilla.psm1'
     ModuleVersion = '0.1.0'
     GUID = '4d9cfc4e-81f6-4e7b-9b24-5a24b7a9c001'
-    Author = 'Power Gorilla'
+    Author = 'Phat Gorrilla'
     CompanyName = 'Local'
     Copyright = '(c) 2026. Local-first utility.'
     Description = 'PowerShell-first local command centre for safe app inventory, workflow integration search, icon workflow building, sign-in status, and dry-run computer care.'
@@ -16,6 +16,7 @@
         'Import-PGIntegrationDatasets',
         'Get-PGIntegrationSearch',
         'Get-PGWorkflowSuggestions',
+        'Get-PGSuggestedWorkflows',
         'Get-PGSignInReport',
         'Update-PGIconCache',
         'Invoke-PGCommand',

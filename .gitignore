@@ -1,4 +1,4 @@
-# PowerShell Gorrilla — Git Ignore
+# Phat Gorrilla Git Ignore
 
 # Large data files
 PowerGorilla/data/imports/*.csv
@@ -36,6 +36,7 @@ PowerGorilla/frontend/dist/
 PowerGorilla/frontend/web-build/
 PowerGorilla/frontend/.cache/
 PowerGorilla/frontend/expo-env.d.ts
+PowerGorilla/frontend/dist-smoke*.png
 
 # Windows
 Thumbs.db

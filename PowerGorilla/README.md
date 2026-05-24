@@ -1,30 +1,36 @@
-# Power Gorilla
+# Phat Gorrilla
 
-Power Gorilla is a PowerShell-first, local-first Windows command centre for app inventory, workflow integration search, visual app-icon workflow building, sign-in status review, and safe dry-run system care.
+<img src="docs/assets/phat-gorrilla-logo.png" alt="Phat Gorrilla logo" width="180">
 
-## Phase 1 Status
+Phat Gorrilla is a PowerShell-first, local-first Windows command centre for app inventory, workflow search, visual app-icon workflow building, sign-in status review, Ollama-backed JSON schema processing, and safe dry-run system care.
 
-Built:
-- Folder structure under `PowerGorilla`
-- PowerShell module under `modules\PowerGorilla`
-- Dataset imports under `data\imports`
-- Processed dashboard data under `data\processed`
-- Safe icon cache under `data\icons`
-- Read-only dashboard under `ui`
-- Setup, launcher, and validation scripts
-- Dry-run command engine
-- Sign-in/local availability classifier
-- Visual app icon integration builder
+## Hard Rules
 
-Not yet enabled:
-- Confirmed system-changing fixes
-- Confirmed app updates
-- Restore point execution
-- Ollama-assisted analysis execution
+- Local-first operation is the default.
+- No paid subscriptions, paid APIs, trials, premium plans, or commercial-only app recommendations.
+- Free, open-source, built-in Windows tools, and free-tier services are allowed.
+- Supabase, Cloudflare Pages, GitHub Pages, and Expo are optional free-tier integrations. The local dashboard does not require them.
+
+## Built
+
+- Local PowerShell app under `PowerGorilla`
+- Dashboard under `ui`
+- Expo frontend under `frontend`
+- Free promotional website under `site`
+- JSON schemas under `schema`
+- Optional Supabase migrations under `supabase/migrations`
+- Dataset imports under `data/imports`
+- Processed local state under `data/processed`
+- Setup, launcher, validation, batch, and orchestration scripts
+- Strict Safe Mode with preview-only risky actions
+- Cost policy filtering that blocks known paid/trial/subscription items
+- Ollama extraction flow for large JSON schema enrichment before Supabase sync
+
+## Brand Assets
+
+The Phat Gorrilla logo, icon set, small dashboard image, Expo splash/favicon assets, desktop launcher icon, and GitHub/social preview pack live in `assets`, `frontend/assets`, `ui/assets`, and `docs/assets/brand`.
 
 ## Setup
-
-From the `PowerGorilla` folder:
 
 ```powershell
 .\scripts\Setup-PowerGorilla.ps1
@@ -36,12 +42,6 @@ Optional desktop icon commands:
 .\scripts\Setup-PowerGorilla.ps1 -CreateDesktopIcon
 .\scripts\Setup-PowerGorilla.ps1 -RepairDesktopIcon
 .\scripts\Setup-PowerGorilla.ps1 -RemoveDesktopIcon
-```
-
-Optional icon extraction:
-
-```powershell
-.\scripts\Setup-PowerGorilla.ps1 -ExtractIcons
 ```
 
 ## Launch
@@ -56,36 +56,66 @@ The dashboard runs locally at:
 http://127.0.0.1:8765/
 ```
 
-To launch without opening a browser:
+## Desktop Launcher
+
+Create or repair the Phat Gorrilla desktop shortcut using the built-in launcher icon. The shortcut now launches Phat Gorrilla in a browser app window when supported, so it behaves like a standalone desktop app instead of a regular tabbed website.
 
 ```powershell
-.\Start-PowerGorilla.ps1 -NoBrowser
+cd .\PowerGorilla
+.\scripts\Setup-PowerGorilla.ps1 -CreateDesktopIcon
+```
+
+If the desktop shortcut still opens in a normal browser page, install Microsoft Edge, Chrome, Brave, or Opera and recreate the shortcut.
+
+## GitHub connection
+
+Connect the app repository to GitHub with the helper script:
+
+```powershell
+cd .\PowerGorilla
+.\scripts\Connect-GitHub.ps1 -RepositoryUrl 'https://github.com/<user>/<repo>.git'
 ```
 
 ## Validate
+
+Fast GitHub/package validation:
+
+```powershell
+.\scripts\Validate-PowerGorilla.ps1 -StaticOnly
+```
+
+Local runtime validation:
+
+```powershell
+.\scripts\Validate-PowerGorilla.ps1
+```
+
+Supabase-backed validation:
+
+```powershell
+.\scripts\Validate-PowerGorilla.ps1 -UseSupabase
+```
+
+Deep local data refresh validation:
 
 ```powershell
 .\scripts\Validate-PowerGorilla.ps1 -RefreshData
 ```
 
 Validation writes a JSON report under `reports`.
+`-RefreshData` regenerates local dashboard data from this machine. Review `ui/app-data.js` before committing after a refresh.
 
-## Source Datasets
+## Optional Frontend
 
-Expected source files:
+```powershell
+cd .\frontend
+npm run web
+```
 
-- `data\imports\Proper_Apps_Shortlist.csv`
-- `data\imports\Two_App_20K_Free_OpenSource_Combinations.csv`
-- `data\imports\Three_App_200K_Free_OpenSource_Integrations.csv`
-- `data\imports\Four_App_400K_Free_OpenSource_Integrations.csv`
+Create `frontend/.env.local` from `frontend/.env.example` only for optional free-tier Supabase access.
 
-If `Proper_Apps_Shortlist.csv` is not present, Power Gorilla derives app candidates from the imported integration datasets.
+For the fastest Supabase-backed frontend, apply every file in `supabase/migrations`, including `004_frontend_performance.sql`. The Expo app caches public reads, debounces search input, and forces a fresh read only when the user refreshes.
 
-## Safety Rules
+## Ollama JSON Schema Layer
 
-- Strict Safe Mode is the default.
-- Dashboard launch/update/fix buttons preview actions only in Phase 1.
-- No passwords, tokens, cookies, sessions, or private keys are stored.
-- No destructive system action runs without explicit future confirmation support.
-- Logs redact common credential patterns.
-- Cloud sign-in is detected as a status/classification only; Power Gorilla does not sign into apps.
+Ollama is the local intelligence layer for large schema work. Use it to extract, enrich, and validate app/workflow data against `schema` before pushing clean records to Supabase for fast read-only demos.

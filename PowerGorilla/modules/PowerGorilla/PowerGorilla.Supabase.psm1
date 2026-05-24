@@ -11,13 +11,46 @@
 
 Set-StrictMode -Version 2.0
 
-# ─── Config (loaded from .env.ps1 next to this file) ──────────────────────────
+# Config loaded from PowerGorilla\.env.ps1.
 $script:SupabaseConfig = $null
+
+function Get-GorProjectRoot {
+    return (Resolve-Path -LiteralPath (Join-Path $PSScriptRoot '..\..')).Path
+}
+
+function Get-GorValue {
+    param(
+        [AllowNull()]$Object,
+        [Parameter(Mandatory)][string[]]$Names,
+        [AllowNull()]$Default = $null
+    )
+
+    if ($null -eq $Object) { return $Default }
+    foreach ($name in $Names) {
+        $property = $Object.PSObject.Properties[$name]
+        if ($property -and $null -ne $property.Value) {
+            return $property.Value
+        }
+    }
+    return $Default
+}
+
+function Split-GorChunk {
+    param(
+        [Parameter(Mandatory)][object[]]$Items,
+        [ValidateRange(1, [int]::MaxValue)][int]$Size
+    )
+
+    for ($index = 0; $index -lt $Items.Count; $index += $Size) {
+        $last = [Math]::Min($index + $Size - 1, $Items.Count - 1)
+        ,@($Items[$index..$last])
+    }
+}
 
 function Get-GorSupabaseConfig {
     if ($script:SupabaseConfig) { return $script:SupabaseConfig }
 
-    $envFile = Join-Path $PSScriptRoot '.env.ps1'
+    $envFile = Join-Path (Get-GorProjectRoot) '.env.ps1'
     if (Test-Path -LiteralPath $envFile) {
         . $envFile
     }
@@ -29,12 +62,8 @@ function Get-GorSupabaseConfig {
     $embedModel = if ($env:GORILLA_EMBED_MODEL) { $env:GORILLA_EMBED_MODEL } else { 'nomic-embed-text' }
     $extractModel = if ($env:GORILLA_EXTRACT_MODEL) { $env:GORILLA_EXTRACT_MODEL } else { 'llama3.2' }
 
-    if ([string]::IsNullOrWhiteSpace($url) -or [string]::IsNullOrWhiteSpace($svcKey)) {
-        throw "Missing Supabase config. Create '$envFile' with GORILLA_SUPABASE_URL and GORILLA_SUPABASE_SERVICE_KEY, or set environment variables."
-    }
-
     $script:SupabaseConfig = [pscustomobject]@{
-        Url          = $url.TrimEnd('/')
+        Url          = if ($url) { $url.TrimEnd('/') } else { '' }
         ServiceKey   = $svcKey
         AnonKey      = $anonKey
         OllamaUrl    = $ollamaUrl.TrimEnd('/')
@@ -54,7 +83,10 @@ function Invoke-SupabaseRest {
         [hashtable]$ExtraHeaders = @{}
     )
     $config = Get-GorSupabaseConfig
-    $key = if ($UseServiceKey) { $config.ServiceKey } else { $config.AnonKey }
+    $key = if ($UseServiceKey -and $config.ServiceKey) { $config.ServiceKey } else { $config.AnonKey }
+    if ([string]::IsNullOrWhiteSpace($config.Url) -or [string]::IsNullOrWhiteSpace($key)) {
+        throw 'Optional Supabase free-tier sync is not configured. Local dashboard and local Ollama processing can still run without it.'
+    }
     $headers = @{
         'apikey'        = $key
         'Authorization' = "Bearer $key"
@@ -162,14 +194,15 @@ function Invoke-GorJson {
     Write-Host 'gorjson: Loading app inventory...' -ForegroundColor Cyan
 
     # Load PowerGorilla module if available
-    $pgModule = Join-Path $PSScriptRoot 'modules\PowerGorilla\PowerGorilla.psm1'
+    $projectRoot = Get-GorProjectRoot
+    $pgModule = Join-Path $PSScriptRoot 'PowerGorilla.psm1'
     if (Test-Path -LiteralPath $pgModule) {
         Import-Module $pgModule -Force -ErrorAction SilentlyContinue
     }
 
     $apps = @()
     if (Get-Command Get-PGAppInventory -ErrorAction SilentlyContinue) {
-        $pgRoot = if ($Root) { $Root } else { $PSScriptRoot }
+        $pgRoot = if ($Root) { $Root } else { $projectRoot }
         $apps = @(Get-PGAppInventory -Root $pgRoot -Refresh:$Refresh)
     } else {
         Write-Warning 'gorjson: PowerGorilla module not found. Using empty app list.'
@@ -181,17 +214,17 @@ function Invoke-GorJson {
     foreach ($app in $apps) {
         # Map PG fields to schema fields
         $record = [ordered]@{
-            id               = [string]($app.Id ?? $app.id ?? '')
-            name             = [string]($app.Name ?? $app.name ?? '')
-            normalizedName   = [string]($app.NormalizedName ?? $app.normalizedName ?? '')
-            category         = [string]($app.Category ?? $app.category ?? 'Unknown')
-            licenceMode      = [string]($app.LicenceMode ?? $app.licenceMode ?? 'Unknown')
-            isOpenSource     = [bool]($app.IsOpenSource ?? $app.isOpenSource ?? $false)
-            isFreeOrFreeTier = [bool]($app.IsFreeOrFreeTier ?? $app.isFreeOrFreeTier ?? $false)
-            signInMode       = [string]($app.SignInMode ?? $app.signInMode ?? 'Unknown')
-            localMode        = [string]($app.LocalMode ?? $app.localMode ?? 'Unknown')
-            status           = [string]($app.Status ?? $app.status ?? 'Missing')
-            installed        = [bool]($app.Installed ?? $app.installed ?? $false)
+            id               = [string](Get-GorValue $app @('Id','id') '')
+            name             = [string](Get-GorValue $app @('Name','name') '')
+            normalizedName   = [string](Get-GorValue $app @('NormalizedName','normalizedName') '')
+            category         = [string](Get-GorValue $app @('Category','category') 'Unknown')
+            licenceMode      = [string](Get-GorValue $app @('LicenceMode','licenceMode') 'Unknown')
+            isOpenSource     = [bool](Get-GorValue $app @('IsOpenSource','isOpenSource') $false)
+            isFreeOrFreeTier = [bool](Get-GorValue $app @('IsFreeOrFreeTier','isFreeOrFreeTier') $false)
+            signInMode       = [string](Get-GorValue $app @('SignInMode','signInMode') 'Unknown')
+            localMode        = [string](Get-GorValue $app @('LocalMode','localMode') 'Unknown')
+            status           = [string](Get-GorValue $app @('Status','status') 'Missing')
+            installed        = [bool](Get-GorValue $app @('Installed','installed') $false)
             installPath      = if ($app.InstallPath) { [string]$app.InstallPath } else { $null }
             executablePath   = if ($app.ExecutablePath) { [string]$app.ExecutablePath } else { $null }
             shortcutPath     = if ($app.ShortcutPath) { [string]$app.ShortcutPath } else { $null }
@@ -199,9 +232,11 @@ function Invoke-GorJson {
             publisher        = if ($app.Publisher) { [string]$app.Publisher } else { $null }
             version          = if ($app.Version) { [string]$app.Version } else { $null }
             lastScanned      = if ($app.LastScanned) { [string]$app.LastScanned } else { (Get-Date).ToString('o') }
-            source           = [string]($app.Source ?? $app.source ?? 'Unknown')
+            source           = [string](Get-GorValue $app @('Source','source') 'Unknown')
             detectedSource   = if ($app.DetectedSource) { [string]$app.DetectedSource } else { $null }
             seenInWorkflows  = if ($app.SeenInWorkflows) { [int]$app.SeenInWorkflows } else { $null }
+            costAllowed      = [bool](Get-GorValue $app @('CostAllowed','costAllowed') $true)
+            costPolicy       = [string](Get-GorValue $app @('CostPolicy','costPolicy') 'Local-first; no paid subscriptions; free-tier only when a cloud service is unavoidable.')
             ollamaEnriched   = $false
             embeddingModel   = $null
         }
@@ -261,13 +296,13 @@ function Invoke-GorExtract {
     Write-Host "gorextract: $($rows.Count) rows from $(Split-Path -Leaf $Path) in batches of $BatchSize using $model" -ForegroundColor Cyan
 
     $schemaJson = if ($Type -eq 'app') {
-        Get-Content (Join-Path $PSScriptRoot 'schema\app.schema.json') -Raw
+        Get-Content (Join-Path (Get-GorProjectRoot) 'schema\app.schema.json') -Raw
     } else {
-        Get-Content (Join-Path $PSScriptRoot 'schema\workflow.schema.json') -Raw
+        Get-Content (Join-Path (Get-GorProjectRoot) 'schema\workflow.schema.json') -Raw
     }
 
     $allResults = [System.Collections.Generic.List[object]]::new()
-    $batches    = [System.Linq.Enumerable]::Chunk($rows, $BatchSize)
+    $batches    = Split-GorChunk -Items $rows -Size $BatchSize
     $batchNum   = 0
 
     foreach ($batch in $batches) {
@@ -275,29 +310,61 @@ function Invoke-GorExtract {
         if ($MaxBatches -gt 0 -and $batchNum -gt $MaxBatches) { break }
 
         $rowsJson = $batch | ConvertTo-Json -Depth 6 -Compress
-        $prompt = @"
-You are a data extraction assistant. Extract structured data from these CSV rows.
+        $prompt = ""
+        if ($Type -eq 'app') {
+            $prompt = @"
+You are a strict Data Quality Architect specializing in verifying software compliance with open-source and free-tier policy constraints. Your priority is to flag and block paid, trial, commercial, or subscription software.
 
 TARGET JSON SCHEMA:
 $schemaJson
 
-CSV ROWS (JSON array):
+INPUT CSV ROWS (JSON array):
 $rowsJson
 
-Return a JSON array of objects that match the schema exactly. One object per input row.
-Rules:
-- Use null for missing optional fields
-- licenceMode must be one of: Open-source, Free, Free-tier, Built-in, Paid or trial, Unknown
-- status must be one of: Installed, Missing, Portable, Store app, Shortcut only
-- combinationSize must be an integer 2-4
-- difficulty must be: Easy, Medium, Hard, or Unknown
-- riskLevel must be: Low, Medium, or High
-- Generate a slug id from the name (lowercase, hyphens, no spaces)
-- Set ollamaEnriched to true
-- Set lastScanned to current ISO timestamp
+INSTRUCTIONS:
+For each input row, extract an application record into a JSON object matching the TARGET JSON SCHEMA exactly. Return a JSON array.
 
-Return ONLY the JSON array. No explanation. No markdown. No code blocks.
+STRICT COST POLICY ENFORCEMENT:
+- licenceMode MUST be one of: "Open-source", "Free", "Free-tier", "Built-in", "Paid or trial", "Unknown".
+- Scan name, tags, description, source, and pricing information carefully.
+- If there is ANY indication of paid licensing, commercial usage, trials, premiums, or subscriptions (e.g. "trial", "paid", "subscription", "commercial", "premium", "m365", "adobe", "license key", "credit card"), you MUST classify licenceMode as "Paid or trial" and set costAllowed to false.
+- Set costAllowed to true ONLY for completely open-source, free-tier, built-in, or free software.
+- The costPolicy MUST be exactly set to: "Local-first; no paid subscriptions; free-tier only when a cloud service is unavoidable."
+- Ensure status is one of: "Installed", "Missing", "Portable", "Store app", "Shortcut only".
+- Generate a slug id from the name (lowercase, alphanumeric, hyphens, no spaces).
+- Set ollamaEnriched to true.
+- Set lastScanned to the current ISO timestamp.
+
+OUTPUT FORMAT:
+Return ONLY a valid JSON array of objects. Do not include markdown formatting, backticks (e.g. ```json), or explanatory text.
 "@
+        } else {
+            $prompt = @"
+You are a strict visual workflow planner. Your job is to construct multi-app integrations that strictly rely on free-tier, free-subscription, or open-source local-first apps.
+
+TARGET JSON SCHEMA:
+$schemaJson
+
+INPUT CSV ROWS (JSON array):
+$rowsJson
+
+INSTRUCTIONS:
+For each input row, extract a workflow record into a JSON object matching the TARGET JSON SCHEMA exactly. Return a JSON array.
+
+STRICT COST & SECURITY POLICY:
+- If the workflow depends on ANY application that is paid, trial, commercial, premium, or subscription-based, you MUST set costAllowed to false.
+- Set costAllowed to true ONLY if all apps in the workflow are free-tier, free-subscription, open-source, or built-in.
+- The costPolicy MUST be exactly set to: "Local-first; no paid subscriptions; free-tier only when a cloud service is unavoidable."
+- Analyze difficulty, setting it strictly to: "Easy", "Medium", "Hard", or "Unknown".
+- Evaluate riskLevel (based on whether the workflow initiates OS modifications or system writes), setting it strictly to: "Low", "Medium", or "High".
+- Set combinationSize strictly to the integer size of appNames (between 2 and 4).
+- Generate a clean slug id from the workflowName.
+- Set ollamaEnriched to true.
+
+OUTPUT FORMAT:
+Return ONLY a valid JSON array of objects. Do not include markdown formatting, backticks (e.g. ```json), or explanatory text.
+"@
+        }
 
         Write-Host "  Batch $batchNum / $(if ($MaxBatches -gt 0) { $MaxBatches } else { [Math]::Ceiling($rows.Count / $BatchSize) })..." -ForegroundColor Gray
 
@@ -379,7 +446,7 @@ function Invoke-GorPush {
 
     $pushed = 0
     $failed = 0
-    $chunks = [System.Linq.Enumerable]::Chunk($Records, $BatchSize)
+    $chunks = Split-GorChunk -Items $Records -Size $BatchSize
 
     foreach ($chunk in $chunks) {
         if ($DryRun) {
@@ -413,6 +480,8 @@ function Invoke-GorPush {
                     source           = $r.source
                     detected_source  = $r.detectedSource
                     seen_in_workflows = $r.seenInWorkflows
+                    cost_allowed    = if ($null -ne $r.costAllowed) { $r.costAllowed } else { $true }
+                    cost_policy     = if ($r.costPolicy) { $r.costPolicy } else { 'Local-first; no paid subscriptions; free-tier only when a cloud service is unavoidable.' }
                     ollama_enriched  = $r.ollamaEnriched
                     embedding_model  = $r.embeddingModel
                     last_scanned     = $r.lastScanned
@@ -432,6 +501,8 @@ function Invoke-GorPush {
                     rank_score           = $r.rankScore
                     sign_in_requirement  = $r.signInRequirement
                     powershell_plan      = $r.powerShellPlan
+                    cost_allowed         = if ($null -ne $r.costAllowed) { $r.costAllowed } else { $true }
+                    cost_policy          = if ($r.costPolicy) { $r.costPolicy } else { 'Local-first; no paid subscriptions; free-tier only when a cloud service is unavoidable.' }
                     ollama_enriched      = $r.ollamaEnriched
                     embedding_model      = $r.embeddingModel
                 }

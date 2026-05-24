@@ -1,0 +1,43 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "gorilla/app/v1",
+  "title": "PowerShell Gorilla App Record",
+  "type": "object",
+  "required": ["id", "name", "status", "category", "installed", "lastScanned"],
+  "additionalProperties": false,
+  "properties": {
+    "id":               { "type": "string", "description": "Normalized slug ID, e.g. visual-studio-code" },
+    "name":             { "type": "string", "description": "Display name of the app" },
+    "normalizedName":   { "type": "string", "description": "Lowercased, symbol-stripped name for matching" },
+    "category":         { "type": "string", "description": "Primary category, e.g. Development, Media, Security" },
+    "licenceMode":      {
+      "type": "string",
+      "enum": ["Open-source", "Free", "Free-tier", "Built-in", "Paid or trial", "Unknown"],
+      "default": "Unknown"
+    },
+    "isOpenSource":     { "type": "boolean", "default": false },
+    "isFreeOrFreeTier": { "type": "boolean", "default": false },
+    "signInMode":       { "type": "string", "default": "Unknown" },
+    "localMode":        { "type": "string", "default": "Unknown" },
+    "status":           {
+      "type": "string",
+      "enum": ["Installed", "Missing", "Portable", "Store app", "Shortcut only"],
+      "description": "Current installation status on this machine"
+    },
+    "installed":        { "type": "boolean" },
+    "installPath":      { "type": ["string", "null"], "default": null },
+    "executablePath":   { "type": ["string", "null"], "default": null },
+    "shortcutPath":     { "type": ["string", "null"], "default": null },
+    "iconUrl":          { "type": ["string", "null"], "default": null },
+    "publisher":        { "type": ["string", "null"], "default": null },
+    "version":          { "type": ["string", "null"], "default": null },
+    "lastScanned":      { "type": "string", "format": "date-time" },
+    "source":           { "type": "string", "description": "Where this record originated, e.g. Registry, Shortcut, Proper_Apps_Shortlist.csv" },
+    "detectedSource":   { "type": ["string", "null"], "default": null },
+    "seenInWorkflows":  { "type": ["integer", "null"], "default": null },
+    "costAllowed":      { "type": "boolean", "default": true, "description": "False when an app is paid, trial, commercial, premium, or subscription-based" },
+    "costPolicy":       { "type": "string", "default": "Local-first; no paid subscriptions; free-tier only when a cloud service is unavoidable." },
+    "ollamaEnriched":   { "type": "boolean", "default": false },
+    "embeddingModel":   { "type": ["string", "null"], "default": null, "description": "Ollama model used to generate the pgvector embedding" }
+  }
+}

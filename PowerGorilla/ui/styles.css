@@ -55,12 +55,11 @@ button, input, select { font: inherit; }
 .brandMark {
   width: 54px;
   height: 54px;
-  display: grid;
-  place-items: center;
   border-radius: 8px;
-  background: linear-gradient(135deg, #2b9f88, #426fca);
-  font-weight: 800;
-  letter-spacing: .08em;
+  object-fit: cover;
+  background: #05090d;
+  border: 1px solid rgba(86, 220, 255, .35);
+  box-shadow: 0 0 18px rgba(32, 199, 255, .18);
 }
 
 .brandBlock h1 {
@@ -119,6 +118,16 @@ main {
   font-size: 30px;
   line-height: 1.15;
   letter-spacing: 0;
+}
+
+.topBrandImage {
+  width: 112px;
+  height: 112px;
+  flex: 0 0 auto;
+  object-fit: cover;
+  border-radius: 8px;
+  border: 1px solid rgba(255,255,255,.28);
+  box-shadow: 0 12px 34px rgba(0,0,0,.24);
 }
 
 .eyebrow {
@@ -587,6 +596,10 @@ pre {
   .topBar, .sectionHead, .twoColumn, .builderLayout {
     display: grid;
     grid-template-columns: 1fr;
+  }
+  .topBrandImage {
+    width: 96px;
+    height: 96px;
   }
   .metricGrid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
