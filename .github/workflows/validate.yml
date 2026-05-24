@@ -13,9 +13,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Setup PowerShell
-        uses: actions/setup-pwsh@v2
-
+      # PowerShell is already available as pwsh on the Windows runner.
       - name: Run validation
         shell: pwsh
         run: |
