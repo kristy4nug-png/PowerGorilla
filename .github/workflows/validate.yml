@@ -1,0 +1,29 @@
+name: Validate PowerGorilla
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+jobs:
+  validate:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup PowerShell
+        uses: actions/setup-pwsh@v2
+
+      - name: Run validation
+        shell: pwsh
+        run: |
+          pwsh -NoProfile -Command "Set-StrictMode -Version 2.0; .\scripts\Validate-PowerGorilla.ps1 -RefreshData -ExtractIcons | Out-Null"
+
+      - name: Upload validation report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: powergorilla-validation-report
+          path: PowerGorilla\reports\Validation-Report-*.json
