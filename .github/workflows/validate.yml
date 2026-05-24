@@ -45,10 +45,14 @@ jobs:
             "Vercel,Frontend,online,https://vercel.com,Frontend hosting,true,true,GitHub + Vercel"
           )
 
-          Set-Content -LiteralPath ".\PowerGorilla\data\imports\ci-backend-ai.csv" -Encoding UTF8 -Value @(
+          Set-Content -LiteralPath ".\PowerGorilla\data\imports\ci-workflow-samples.csv" -Encoding UTF8 -Value @(
             "Name,Category,Type,LaunchUrl,Description,IconExtracted,SafeToLaunch,Workflow",
             "Supabase,Backend,online,https://supabase.com,Backend platform,true,true,Supabase + Ollama + JSON",
-            "Ollama,AI,local,http://localhost:11434,Local AI runtime,true,true,Supabase + Ollama + JSON"
+            "Ollama,AI,local,http://localhost:11434,Local AI runtime,true,true,Supabase + Ollama + JSON",
+            "age,Security,desktop,,Encryption tool,true,true,age + BleachBit + 7-Zip",
+            "BleachBit,Cleanup,desktop,,System cleaner,true,true,age + BleachBit + 7-Zip",
+            "7-Zip,Archive,desktop,,Archive manager,true,true,age + BleachBit + 7-Zip",
+            "LibreOffice,Office,desktop,,Office suite,true,true,age + Audacity + 7-Zip + LibreOffice"
           )
 
           $StatePath = ".\PowerGorilla\data\processed\dashboard-state.json"
@@ -63,45 +67,27 @@ jobs:
               realUserDataIncluded = $false
             }
             apps = @(
-              @{
-                name = "Audacity"
-                category = "Audio"
-                type = "desktop"
-                IconExtracted = $true
-                safeToLaunch = $true
-              },
-              @{
-                name = "Blender"
-                category = "Design"
-                type = "desktop"
-                IconExtracted = $true
-                safeToLaunch = $true
-              },
-              @{
-                name = "GitHub"
-                category = "Development"
-                type = "online"
-                launchUrl = "https://github.com"
-                IconExtracted = $true
-                safeToLaunch = $true
-              }
+              @{ name = "Audacity"; category = "Audio"; type = "desktop"; IconExtracted = $true; safeToLaunch = $true },
+              @{ name = "Blender"; category = "Design"; type = "desktop"; IconExtracted = $true; safeToLaunch = $true },
+              @{ name = "GitHub"; category = "Development"; type = "online"; launchUrl = "https://github.com"; IconExtracted = $true; safeToLaunch = $true },
+              @{ name = "Vercel"; category = "Frontend"; type = "online"; launchUrl = "https://vercel.com"; IconExtracted = $true; safeToLaunch = $true },
+              @{ name = "Supabase"; category = "Backend"; type = "online"; launchUrl = "https://supabase.com"; IconExtracted = $true; safeToLaunch = $true },
+              @{ name = "Ollama"; category = "AI"; type = "local"; launchUrl = "http://localhost:11434"; IconExtracted = $true; safeToLaunch = $true },
+              @{ name = "age"; category = "Security"; type = "desktop"; IconExtracted = $true; safeToLaunch = $true },
+              @{ name = "BleachBit"; category = "Cleanup"; type = "desktop"; IconExtracted = $true; safeToLaunch = $true },
+              @{ name = "7-Zip"; category = "Archive"; type = "desktop"; IconExtracted = $true; safeToLaunch = $true },
+              @{ name = "LibreOffice"; category = "Office"; type = "desktop"; IconExtracted = $true; safeToLaunch = $true }
             )
             workflows = @(
-              @{
-                name = "Audacity + Blender"
-                apps = @("Audacity", "Blender")
-                safeToLaunch = $true
-              },
-              @{
-                name = "GitHub + Vercel"
-                apps = @("GitHub", "Vercel")
-                safeToLaunch = $true
-              }
+              @{ name = "Audacity + Blender"; apps = @("Audacity", "Blender"); safeToLaunch = $true },
+              @{ name = "GitHub + Vercel"; apps = @("GitHub", "Vercel"); safeToLaunch = $true },
+              @{ name = "age + BleachBit + 7-Zip"; apps = @("age", "BleachBit", "7-Zip"); safeToLaunch = $true },
+              @{ name = "age + Audacity + 7-Zip + LibreOffice"; apps = @("age", "Audacity", "7-Zip", "LibreOffice"); safeToLaunch = $true }
             )
             integrations = @()
             commands = @()
             icons = @()
-            categories = @("Audio", "Design", "Development", "Frontend", "Backend", "AI")
+            categories = @("Audio", "Design", "Development", "Frontend", "Backend", "AI", "Security", "Cleanup", "Archive", "Office")
             warnings = @("CI created safe sample data because generated local data is not committed.")
           } | ConvertTo-Json -Depth 20 | Set-Content -LiteralPath $StatePath -Encoding UTF8
 
