@@ -1,4 +1,4 @@
--- Bad Gorrilla frontend performance
+-- Phat Gorrilla frontend performance
 -- Free-tier friendly indexes and small views for the Expo/Supabase UI.
 
 CREATE EXTENSION IF NOT EXISTS pg_trgm;

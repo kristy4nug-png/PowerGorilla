@@ -1,0 +1,14 @@
+{
+  "brand": "Phat Gorrilla",
+  "generated_from": "phat_gorrilla_brand_pack",
+  "app_assets": {
+    "logo": "PowerGorilla/assets/phat-gorrilla-logo.png",
+    "icon": "PowerGorilla/assets/phat-gorrilla-icon.png",
+    "desktop_launcher_icon": "PowerGorilla/assets/gorrilla-launcher.ico",
+    "expo_icon": "PowerGorilla/frontend/assets/icon.png",
+    "expo_favicon": "PowerGorilla/frontend/assets/favicon.png",
+    "local_dashboard_logo": "PowerGorilla/ui/assets/phat-gorrilla-logo.png",
+    "local_dashboard_icon": "PowerGorilla/ui/assets/phat-gorrilla-icon.png"
+  },
+  "social_pack": "PowerGorilla/docs/assets/brand/"
+}

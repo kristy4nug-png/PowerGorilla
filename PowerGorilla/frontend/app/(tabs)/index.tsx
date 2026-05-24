@@ -3,11 +3,13 @@
 import React, { useEffect, useState } from 'react';
 import {
   View, Text, ScrollView, StyleSheet, RefreshControl,
-  TouchableOpacity, ActivityIndicator,
+  TouchableOpacity, ActivityIndicator, Image,
 } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 import { fetchDashboardStats, fetchAuditLog } from '../../lib/supabase';
 import { Colors, Typography, Spacing, Radius, Shadow } from '../../lib/theme';
+
+const brandLogo = require('../../assets/icon.png');
 
 interface Stats {
   total_apps: number;
@@ -112,13 +114,18 @@ export default function DashboardScreen() {
       refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); load(true); }} tintColor={Colors.accent} />}
     >
       <View style={styles.hero}>
-        <Text style={styles.heroTitle}>Bad Gorrilla</Text>
-        <Text style={styles.heroSub}>Local-first command centre · Supabase · pgvector · Ollama JSON schema engine</Text>
-        {stats && (
-          <Text style={styles.heroTs}>
-            Updated {new Date(stats.generated_at).toLocaleString()}
-          </Text>
-        )}
+        <View style={styles.heroHeader}>
+          <View style={styles.heroCopy}>
+            <Text style={styles.heroTitle}>Phat Gorrilla</Text>
+            <Text style={styles.heroSub}>Local-first command centre · Supabase · pgvector · Ollama JSON schema engine</Text>
+            {stats && (
+              <Text style={styles.heroTs}>
+                Updated {new Date(stats.generated_at).toLocaleString()}
+              </Text>
+            )}
+          </View>
+          <Image source={brandLogo} style={styles.heroLogo} accessibilityLabel="Phat Gorrilla logo" />
+        </View>
       </View>
 
       {/* App stats */}
@@ -193,6 +200,9 @@ const styles = StyleSheet.create({
   retryBtn:     { marginTop: Spacing.lg, backgroundColor: Colors.accent, paddingHorizontal: Spacing.lg, paddingVertical: Spacing.sm, borderRadius: Radius.md },
   retryText:    { ...Typography.body, color: '#fff', fontWeight: '700' },
   hero:         { backgroundColor: Colors.panel2, borderRadius: Radius.lg, padding: Spacing.lg, marginBottom: Spacing.lg, borderWidth: 1, borderColor: Colors.border },
+  heroHeader:   { flexDirection: 'row', alignItems: 'center', gap: Spacing.md },
+  heroCopy:     { flex: 1, minWidth: 0 },
+  heroLogo:     { width: 84, height: 84, borderRadius: Radius.md, borderWidth: 1, borderColor: Colors.border },
   heroTitle:    { fontSize: 24, fontWeight: '800', color: Colors.text, marginBottom: 4 },
   heroSub:      { ...Typography.small, color: Colors.muted },
   heroTs:       { ...Typography.small, color: Colors.accent, marginTop: 4 },

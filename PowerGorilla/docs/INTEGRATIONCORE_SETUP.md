@@ -211,7 +211,7 @@ Edit `Start-PowerGorilla.ps1`:
 
 ```powershell
 if ($ExtractIcons -or $RefreshIcons) {
-    Write-Progress -Activity 'Power Gorilla' -Status 'Scanning desktop apps' -PercentComplete 40
+    Write-Progress -Activity 'Phat Gorrilla' -Status 'Scanning desktop apps' -PercentComplete 40
     & ./scripts/Scan-DesktopApps.ps1 -ExtractIcons -OutputFile 'data\processed\desktop_apps_candidates.json'
 }
 ```

@@ -1,4 +1,4 @@
-# Power Gorilla Docs
+# Phat Gorrilla Docs
 
 Start here when preparing the project for GitHub, review, or release.
 
@@ -9,6 +9,7 @@ Start here when preparing the project for GitHub, review, or release.
 | `DATA_FLOW_DIAGRAMS.md` | Existing detailed data-flow notes |
 | `ARCHITECTURE_VISUALS.md` | GitHub-native professional Mermaid visuals |
 | `FREE_TIER_LAUNCH_PLAN.md` | No-card, free-tier GitHub launch path |
+| `assets/brand` | Phat Gorrilla logo, app icons, social previews, banners, and signatures |
 | `IMPLEMENTATION_SUMMARY.md` | Build summary and feature map |
 | `MANIFEST.md` | Implementation inventory |
 

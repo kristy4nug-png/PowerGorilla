@@ -1,6 +1,6 @@
 #!/usr/bin/env pwsh
 <#
-    Connect Power Gorilla to a GitHub repository by configuring the local Git remote.
+    Connect Phat Gorrilla to a GitHub repository by configuring the local Git remote.
 #>
 
 [CmdletBinding()]

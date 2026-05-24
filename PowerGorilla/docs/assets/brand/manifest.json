@@ -1,0 +1,107 @@
+[
+  {
+    "file": "README_PHAT_GORRILLA_BRAND_PACK.txt",
+    "size_kb": 1.0,
+    "under_1mb": true
+  },
+  {
+    "file": "app_icon_128px.png",
+    "size_kb": 36.5,
+    "under_1mb": true
+  },
+  {
+    "file": "app_icon_192px.png",
+    "size_kb": 77.9,
+    "under_1mb": true
+  },
+  {
+    "file": "app_icon_64px.png",
+    "size_kb": 9.9,
+    "under_1mb": true
+  },
+  {
+    "file": "github_social_preview_1280x640_option_1.jpg",
+    "size_kb": 191.9,
+    "under_1mb": true
+  },
+  {
+    "file": "github_social_preview_1280x640_option_2.jpg",
+    "size_kb": 160.9,
+    "under_1mb": true
+  },
+  {
+    "file": "linkedin_banner_1584x396_option_1.jpg",
+    "size_kb": 140.7,
+    "under_1mb": true
+  },
+  {
+    "file": "phat_gorrilla_main_1024_under_1mb.jpg",
+    "size_kb": 350.5,
+    "under_1mb": true
+  },
+  {
+    "file": "profile_avatar_1024px_under_1mb.jpg",
+    "size_kb": 403.0,
+    "under_1mb": true
+  },
+  {
+    "file": "profile_avatar_256px_under_1mb.jpg",
+    "size_kb": 34.6,
+    "under_1mb": true
+  },
+  {
+    "file": "profile_avatar_512px_under_1mb.jpg",
+    "size_kb": 118.3,
+    "under_1mb": true
+  },
+  {
+    "file": "profile_avatar_circle_512px.png",
+    "size_kb": 494.4,
+    "under_1mb": true
+  },
+  {
+    "file": "signature_small_600x160_option_1.jpg",
+    "size_kb": 29.0,
+    "under_1mb": true
+  },
+  {
+    "file": "signature_wide_900x180_option_1.jpg",
+    "size_kb": 33.6,
+    "under_1mb": true
+  },
+  {
+    "file": "signature_wide_900x180_option_2.jpg",
+    "size_kb": 34.2,
+    "under_1mb": true
+  },
+  {
+    "file": "signature_wide_900x180_option_3.jpg",
+    "size_kb": 38.6,
+    "under_1mb": true
+  },
+  {
+    "file": "twitter_x_header_1500x500_option_1.jpg",
+    "size_kb": 168.1,
+    "under_1mb": true
+  },
+  {
+    "file": "twitter_x_header_1500x500_option_2.jpg",
+    "size_kb": 201.2,
+    "under_1mb": true
+  },
+  {
+    "file": "website_hero_1920x700_option_1.jpg",
+    "size_kb": 257.3,
+    "under_1mb": true
+  },
+  {
+    "file": "website_hero_1920x700_option_2.jpg",
+    "size_kb": 309.2,
+    "under_1mb": true
+  },
+  {
+    "file": "youtube_banner_2560x1440_option_1.jpg",
+    "size_kb": 565.7,
+    "under_1mb": true
+  }
+]

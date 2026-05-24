@@ -1,6 +1,6 @@
 # Free-Tier Launch Plan
 
-Power Gorilla can be launched as a professional GitHub project without taking on paid tools or services during the proof stage. The core message is: local-first Windows automation, optional free-tier sync, schema-validated workflows, and safe dry-run operations.
+Phat Gorrilla can be launched as a professional GitHub project without taking on paid tools or services during the proof stage. The core message is: local-first Windows automation, optional free-tier sync, schema-validated workflows, and safe dry-run operations.
 
 ## Non-Negotiable Guardrails
 
@@ -115,7 +115,7 @@ Target `v0.1.0-public-preview`:
 
 ## Positioning
 
-Power Gorilla is not just another wrapper app. The defensible idea is the combination of:
+Phat Gorrilla is not just another wrapper app. The defensible idea is the combination of:
 
 - Local-first Windows command centre.
 - Deterministic PowerShell orchestration.

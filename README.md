@@ -1,8 +1,8 @@
-# Bad Gorrilla
+# Phat Gorrilla
 
-<img src="PowerGorilla/docs/assets/bad-gorrilla-logo.png" alt="Bad Gorrilla logo" width="180">
+<img src="PowerGorilla/docs/assets/phat-gorrilla-logo.png" alt="Phat Gorrilla logo" width="180">
 
-Bad Gorrilla is now consolidated into one app folder: `PowerGorilla`.
+Phat Gorrilla is now consolidated into one app folder: `PowerGorilla`.
 
 It is a local-first Windows command centre for app inventory, visual workflow search, Ollama-backed JSON schema processing, safe dry-run system checks, and optional free-tier Supabase/Expo sync.
 
@@ -24,6 +24,10 @@ It is a local-first Windows command centre for app inventory, visual workflow se
 | `PowerGorilla/schema` | JSON schemas |
 | `PowerGorilla/supabase/migrations` | Optional free-tier Supabase migrations |
 | `PowerGorilla/docs` | Architecture and build notes |
+
+## Brand Assets
+
+The Phat Gorrilla logo, app icons, desktop launcher icon, Expo favicon/splash assets, and GitHub/social preview images are checked in under `PowerGorilla/assets`, `PowerGorilla/frontend/assets`, `PowerGorilla/ui/assets`, and `PowerGorilla/docs/assets/brand`.
 
 ## Run Local Dashboard
 

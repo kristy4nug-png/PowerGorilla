@@ -1,4 +1,4 @@
-﻿-- PowerShell Gorilla â€” Supabase Migration 001
+-- PowerShell Gorilla â€” Supabase Migration 001
 -- Run this in the Supabase SQL Editor at: https://app.supabase.com
 -- Project: powershell-gorrilla
 
@@ -173,7 +173,7 @@ LANGUAGE SQL STABLE AS $$
   LIMIT match_count;
 $$;
 
--- Bad Gorrilla frontend performance
+-- Phat Gorrilla frontend performance
 -- Free-tier friendly indexes and small views for the Expo/Supabase UI.
 
 CREATE EXTENSION IF NOT EXISTS pg_trgm;
@@ -691,7 +691,7 @@ BEGIN
 END;
 $$;
 
--- Power Gorilla local/free-tier policy
+-- Phat Gorrilla local/free-tier policy
 -- Enforces the product rule: local-first, no paid subscriptions, free-tier only when needed.
 
 ALTER TABLE apps

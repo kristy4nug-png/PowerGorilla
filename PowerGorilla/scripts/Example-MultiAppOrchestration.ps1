@@ -113,7 +113,7 @@ if ($Mode -eq 'demo') {
     )
     
     initial_payload = @{
-      file_path = "C:\Users\Chris\Sales_Data.xlsx"
+      file_path = "${env:USERPROFILE}\Documents\Sales_Data.xlsx"
       sheet_name = "Q2_Results"
       range = "A1:F50"
       extract_format = "json"

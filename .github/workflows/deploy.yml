@@ -1,4 +1,4 @@
-name: Build Bad Gorrilla Frontend
+name: Build Phat Gorrilla Frontend
 
 on:
   push:
@@ -47,5 +47,5 @@ jobs:
       - name: Upload web build artifact
         uses: actions/upload-artifact@v4
         with:
-          name: bad-gorrilla-web-build
+          name: phat-gorrilla-web-build
           path: PowerGorilla/frontend/dist

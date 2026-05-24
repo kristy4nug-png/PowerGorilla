@@ -1,6 +1,6 @@
 #!/usr/bin/env pwsh
 <#
-    Power Gorilla launcher
+    Phat Gorrilla launcher
     Starts the local dashboard with PowerShell-generated state.
 #>
 
@@ -32,10 +32,10 @@ Import-Module $moduleManifest -Force
 Initialize-PGProject -Root $rootPath | Out-Null
 
 if ($Refresh -or -not (Test-Path -LiteralPath $statePath)) {
-    Write-Progress -Activity 'Power Gorilla launch' -Status 'Refreshing dashboard state' -PercentComplete 35
+    Write-Progress -Activity 'Phat Gorrilla launch' -Status 'Refreshing dashboard state' -PercentComplete 35
     Invoke-PGRefreshData -Root $rootPath -ExtractIcons:$ExtractIcons | Out-Null
 }
 
-Write-Progress -Activity 'Power Gorilla launch' -Status 'Starting local dashboard' -PercentComplete 80
+Write-Progress -Activity 'Phat Gorrilla launch' -Status 'Starting local dashboard' -PercentComplete 80
 Start-PGDashboardServer -Root $rootPath -Port $Port -OpenBrowser:(!$NoBrowser) -AppMode:$AppMode
-Write-Progress -Activity 'Power Gorilla launch' -Completed
+Write-Progress -Activity 'Phat Gorrilla launch' -Completed

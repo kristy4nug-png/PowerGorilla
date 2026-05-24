@@ -294,7 +294,7 @@ RESULT:
 ## File Structure
 
 ```
-Powershell Gorrilla/
+Phat Gorrilla/
 ├── ARCHITECTURE.md              ← Full design documentation
 ├── QUICKSTART.md               ← Getting started (15 min)
 ├── README.md

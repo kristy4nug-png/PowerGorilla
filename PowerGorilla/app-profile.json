@@ -1,10 +1,10 @@
 {
-  "Name": "Powershell Gorrilla",
+  "Name": "Phat Gorrilla",
   "Type": "Launchers",
   "Section": "Development",
-  "Purpose": "",
-  "Quality": "",
+  "Purpose": "Local-first Windows command centre for safe app inventory, workflow search, Ollama JSON schema work, and optional Supabase sync.",
+  "Quality": "Public preview",
   "LaunchPath": "C:\\Program Files\\PowerShell\\7\\pwsh.exe",
-  "OriginalPath": "C:\\Users\\Chris Nugent\\Desktop\\The Launch\\Development\\PowerShell Gorrilla.lnk",
-  "Updated": "2026-05-20T10:42:29.2823975+01:00"
+  "OriginalPath": "",
+  "Updated": "2026-05-24T00:00:00+01:00"
 }

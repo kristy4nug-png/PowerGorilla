@@ -1,12 +1,19 @@
 // app/_layout.tsx — Root layout with expo-router
 
+import { useEffect } from 'react';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { View, StyleSheet } from 'react-native';
+import { Platform, StyleSheet } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { Colors } from '../lib/theme';
 
 export default function RootLayout() {
+  useEffect(() => {
+    if (Platform.OS === 'web' && typeof document !== 'undefined') {
+      document.title = 'Phat Gorrilla';
+    }
+  }, []);
+
   return (
     <GestureHandlerRootView style={styles.root}>
       <StatusBar style="light" />

@@ -1,4 +1,4 @@
--- Power Gorilla local/free-tier policy
+-- Phat Gorrilla local/free-tier policy
 -- Enforces the product rule: local-first, no paid subscriptions, free-tier only when needed.
 
 ALTER TABLE apps

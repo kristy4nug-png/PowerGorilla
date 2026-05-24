@@ -1,4 +1,4 @@
-# Power Gorilla optional Supabase free-tier sync settings.
+# Phat Gorrilla optional Supabase free-tier sync settings.
 # Copy to .env.ps1 locally and fill in your own free-tier Supabase values.
 
 $env:GORILLA_SUPABASE_URL = 'https://your-project.supabase.co'

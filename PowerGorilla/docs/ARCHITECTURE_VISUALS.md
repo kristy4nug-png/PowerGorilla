@@ -1,4 +1,4 @@
-# Power Gorilla Architecture Visuals
+# Phat Gorrilla Architecture Visuals
 
 This document uses GitHub-native Mermaid diagrams so the visuals render directly in Markdown on GitHub. No paid diagramming account, trial, credit card, or external SaaS is required.
 
@@ -10,7 +10,7 @@ flowchart LR
     buyer["Buyer / evaluator"]
 
     subgraph local["Local Windows machine"]
-        dashboard["Power Gorilla dashboard"]
+        dashboard["Phat Gorrilla dashboard"]
         ps["PowerShell modules and scripts"]
         schemas["JSON schemas"]
         ollama["Local Ollama models"]

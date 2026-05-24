@@ -948,7 +948,7 @@ function New-PGWorkflowActionPlan {
 
     $apps = @($Workflow.AppNames)
     $lines = New-Object System.Collections.Generic.List[string]
-    $lines.Add('# Power Gorilla safe action plan')
+    $lines.Add('# Phat Gorrilla safe action plan')
     $lines.Add('# Strict Safe Mode: preview first, execute only after explicit confirmation.')
     $lines.Add("`$apps = @(" + (($apps | ForEach-Object { "'$($_.Replace("'","''"))'" }) -join ', ') + ')')
     $lines.Add("Invoke-PGCommand -Name 'LaunchApps' -Target (`$apps -join ', ') -WhatIf")
@@ -998,7 +998,7 @@ function Import-PGIntegrationDatasets {
                 $workflowName = ($apps -join ' + ')
             }
             if ([string]::IsNullOrWhiteSpace($description)) {
-                $description = 'Workflow idea from imported Power Gorilla integration dataset.'
+                $description = 'Workflow idea from imported Phat Gorrilla integration dataset.'
             }
             if ([string]::IsNullOrWhiteSpace($category)) {
                 $category = 'Imported workflow'
@@ -1156,7 +1156,7 @@ function Get-PGIntegrationSearch {
         foreach ($row in Import-Csv -LiteralPath $dataset.Path) {
             $rowIndex++
             if (($rowIndex % 5000) -eq 0) {
-                Write-Progress -Activity 'Power Gorilla integration search' -Status ("Scanning {0} row {1}" -f $dataset.ExpectedName, $rowIndex) -PercentComplete -1
+                Write-Progress -Activity 'Phat Gorrilla integration search' -Status ("Scanning {0} row {1}" -f $dataset.ExpectedName, $rowIndex) -PercentComplete -1
             }
 
             $appsForRow = @(Get-PGIntegrationApps -Row $row -Size $dataset.CombinationSize)
@@ -1182,7 +1182,7 @@ function Get-PGIntegrationSearch {
             $automationRaw = Get-PGPropertyValue -Row $row -Candidates @('Automation','Automation Readiness','Automation Ready','Automation Level','PowerShell','Commands','Integration Method')
 
             if ([string]::IsNullOrWhiteSpace($workflowName)) { $workflowName = ($appsForRow -join ' + ') }
-            if ([string]::IsNullOrWhiteSpace($description)) { $description = 'Workflow idea from imported Power Gorilla integration dataset.' }
+            if ([string]::IsNullOrWhiteSpace($description)) { $description = 'Workflow idea from imported Phat Gorrilla integration dataset.' }
             if ([string]::IsNullOrWhiteSpace($categoryValue)) { $categoryValue = 'Imported workflow' }
 
             if ($Category -and $categoryValue -notlike "*$Category*") { continue }
@@ -1266,7 +1266,7 @@ function Get-PGIntegrationSearch {
             }
         }
     }
-    Write-Progress -Activity 'Power Gorilla integration search' -Completed
+    Write-Progress -Activity 'Phat Gorrilla integration search' -Completed
 
     return @($filtered | Sort-Object RankScore -Descending | Select-Object -First $First)
 }
@@ -1350,7 +1350,7 @@ function Get-PGSignInReport {
             SignInMode = $app.SignInMode
             LocalMode = $app.LocalMode
             Installed = $app.Installed
-            Notes = if ($app.SignInMode -match 'required') { 'Use the official app, browser, or CLI sign-in flow. Power Gorilla will not collect credentials.' } elseif ($app.SignInMode -eq 'Unknown') { 'Needs manual review.' } else { 'No credential action needed for local mode.' }
+            Notes = if ($app.SignInMode -match 'required') { 'Use the official app, browser, or CLI sign-in flow. Phat Gorrilla will not collect credentials.' } elseif ($app.SignInMode -eq 'Unknown') { 'Needs manual review.' } else { 'No credential action needed for local mode.' }
         }
     }
     $report | ConvertTo-Json -Depth 8 | Set-Content -LiteralPath $processedPath -Encoding UTF8
@@ -1424,7 +1424,7 @@ function Invoke-PGRefreshData {
     $integrations = @(Import-PGIntegrationDatasets -Root $rootPath -Refresh)
     $signIn = @(Get-PGSignInReport -Root $rootPath -Refresh)
     $state = New-PGDashboardState -Root $rootPath
-    Write-PGLog -Root $rootPath -Area 'Refresh' -Message 'Power Gorilla data refreshed.' -Data @{
+    Write-PGLog -Root $rootPath -Area 'Refresh' -Message 'Phat Gorrilla data refreshed.' -Data @{
         Apps = $inventory.Count
         Integrations = $integrations.Count
         SignInRows = $signIn.Count
@@ -1601,7 +1601,7 @@ function Invoke-PGCommand {
         return [pscustomobject]$plan
     }
 
-    if (-not $PSCmdlet.ShouldProcess($Name, 'Run read-only Power Gorilla command')) {
+    if (-not $PSCmdlet.ShouldProcess($Name, 'Run read-only Phat Gorrilla command')) {
         return [pscustomobject]$plan
     }
 
@@ -1748,7 +1748,7 @@ function Start-PGDashboardServer {
     }
 
     Write-PGLog -Root $rootPath -Area 'Dashboard' -Message "Dashboard server started at $prefix"
-    Write-Host "Power Gorilla dashboard: $prefix" -ForegroundColor Cyan
+    Write-Host "Phat Gorrilla dashboard: $prefix" -ForegroundColor Cyan
     Write-Host 'Press Ctrl+C in this PowerShell window to stop the local server.' -ForegroundColor DarkGray
     if ($AppMode) {
         $browser = Get-PGBrowserAppMode -Url $prefix

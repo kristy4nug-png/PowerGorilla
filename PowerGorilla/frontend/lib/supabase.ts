@@ -19,7 +19,7 @@ export const supabase = createClient(supabaseUrl, supabaseAnon, {
     detectSessionInUrl: false,
   },
   global: {
-    headers: { 'X-Client-Info': 'bad-gorrilla-frontend' },
+    headers: { 'X-Client-Info': 'phat-gorrilla-frontend' },
   },
 });
 
@@ -39,7 +39,7 @@ const DASHBOARD_TTL_MS = 60 * 1000;
 const LIST_TTL_MS = 30 * 1000;
 const CATEGORY_TTL_MS = 10 * 60 * 1000;
 const AUDIT_TTL_MS = 20 * 1000;
-const CACHE_PREFIX = 'bad-gorrilla:supabase:';
+const CACHE_PREFIX = 'phat-gorrilla:supabase:';
 
 const memoryCache = new Map<string, CacheEntry<unknown>>();
 

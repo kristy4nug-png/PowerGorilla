@@ -1,4 +1,4 @@
-# PowerShell Gorrilla — Git Ignore
+# Phat Gorrilla Git Ignore
 
 # Large data files
 PowerGorilla/data/imports/*.csv

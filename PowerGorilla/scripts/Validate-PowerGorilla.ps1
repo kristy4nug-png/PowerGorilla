@@ -1,6 +1,6 @@
 #!/usr/bin/env pwsh
 <#
-    Power Gorilla validation
+    Phat Gorrilla validation
     Proves the Phase 1 foundation imports, launches, and remains preview-only for risky UI actions.
 #>
 
@@ -91,7 +91,7 @@ if ($UseSupabase) {
 }
 
 for ($i = 0; $i -lt $steps.Count; $i++) {
-    Write-Progress -Activity 'Power Gorilla validation' -Status $steps[$i] -PercentComplete ([int](($i / $steps.Count) * 100))
+    Write-Progress -Activity 'Phat Gorrilla validation' -Status $steps[$i] -PercentComplete ([int](($i / $steps.Count) * 100))
     switch ($steps[$i]) {
         'Folder structure' {
             Invoke-Check 'Required folders exist' {
@@ -170,8 +170,8 @@ for ($i = 0; $i -lt $steps.Count; $i++) {
             }
         }
         'Brand assets' {
-            Invoke-Check 'Bad Gorrilla brand assets exist' {
-                $files = @('assets\bad-gorrilla-logo.png','assets\bad-gorrilla-icon.png','assets\gorrilla-launcher.ico','ui\assets\bad-gorrilla-logo.png','frontend\assets\icon.png','frontend\assets\favicon.png')
+            Invoke-Check 'Phat Gorrilla brand assets exist' {
+                $files = @('assets\phat-gorrilla-logo.png','assets\phat-gorrilla-icon.png','assets\gorrilla-launcher.ico','ui\assets\phat-gorrilla-logo.png','frontend\assets\icon.png','frontend\assets\favicon.png')
                 $missing = @($files | Where-Object { -not (Test-Path -LiteralPath (Join-Path $rootPath $_)) })
                 if ($missing.Count) { throw "Missing brand assets: $($missing -join ', ')" }
                 'Brand assets exist.'
@@ -259,14 +259,14 @@ for ($i = 0; $i -lt $steps.Count; $i++) {
     }
 }
 
-Write-Progress -Activity 'Power Gorilla validation' -Completed
+Write-Progress -Activity 'Phat Gorrilla validation' -Completed
 
 $passed = @($script:checks | Where-Object passed).Count
 $failed = @($script:checks | Where-Object { -not $_.passed }).Count
 $status = if ($failed -eq 0) { 'Completed' } else { 'Failed Safely' }
 $outcome = [ordered]@{
     timestamp = (Get-Date).ToString('o')
-    task = if ($StaticOnly) { 'Validate Bad Gorrilla static GitHub package' } elseif ($UseSupabase) { 'Validate Bad Gorrilla Phase 1 with Supabase' } else { 'Validate Bad Gorrilla Phase 1' }
+    task = if ($StaticOnly) { 'Validate Phat Gorrilla static GitHub package' } elseif ($UseSupabase) { 'Validate Phat Gorrilla Phase 1 with Supabase' } else { 'Validate Phat Gorrilla Phase 1' }
     projectPath = $rootPath
     finalStatus = $status
     checked = $script:checks.Count

@@ -1,6 +1,6 @@
 #!/usr/bin/env pwsh
 <#
-    Power Gorilla setup
+    Phat Gorrilla setup
     PowerShell-first setup, dataset import, dashboard state refresh, and optional desktop shortcut management.
 #>
 
@@ -37,7 +37,7 @@ function Write-SetupStep {
         [string]$Message
     )
     $percent = [int](($Step / [Math]::Max($Total, 1)) * 100)
-    Write-Progress -Activity 'Power Gorilla setup' -Status $Message -PercentComplete $percent
+    Write-Progress -Activity 'Phat Gorrilla setup' -Status $Message -PercentComplete $percent
     Write-Host ("[{0}/{1}] {2}" -f $Step, $Total, $Message) -ForegroundColor Cyan
 }
 
@@ -84,7 +84,7 @@ function Expand-CsvZipIfMissing {
 
 function Get-PGDesktopShortcutPath {
     $desktop = [Environment]::GetFolderPath('DesktopDirectory')
-    return Join-Path $desktop 'Power Gorilla.lnk'
+    return Join-Path $desktop 'Phat Gorrilla.lnk'
 }
 
 function Get-PGPreferredShell {
@@ -114,7 +114,7 @@ function Set-PGDesktopShortcut {
     $ico = Join-Path $RootPath 'assets\gorrilla-launcher.ico'
     if (Test-Path -LiteralPath $ico) { $shortcut.IconLocation = $ico }
     elseif (Test-Path -LiteralPath $icon) { $shortcut.IconLocation = $icon }
-    $shortcut.Description = 'Power Gorilla local Windows command centre'
+    $shortcut.Description = 'Phat Gorrilla local Windows command centre'
     $shortcut.Save()
     return $shortcutPath
 }
@@ -127,7 +127,7 @@ $reportDir = Join-Path $rootPath 'reports'
 $totalSteps = 7
 $report = [ordered]@{
     timestamp = (Get-Date).ToString('o')
-    task = 'Setup Power Gorilla'
+    task = 'Setup Phat Gorrilla'
     projectPath = $rootPath
     actionsPerformed = @()
     actionsSkipped = @()
@@ -200,7 +200,7 @@ try {
     if ($RemoveDesktopIcon) {
         $shortcutPath = Get-PGDesktopShortcutPath
         if (Test-Path -LiteralPath $shortcutPath) {
-            if ($PSCmdlet.ShouldProcess($shortcutPath, 'Remove Power Gorilla desktop shortcut')) {
+            if ($PSCmdlet.ShouldProcess($shortcutPath, 'Remove Phat Gorrilla desktop shortcut')) {
                 Remove-Item -LiteralPath $shortcutPath
                 $report.actionsPerformed += "Removed desktop icon: $shortcutPath"
             }
@@ -223,7 +223,7 @@ try {
     Write-PGLog -Root $rootPath -Area 'Setup' -Message 'Setup completed.' -Data @{ Report = $reportPath }
 
     Write-SetupStep 7 $totalSteps 'Complete'
-    Write-Progress -Activity 'Power Gorilla setup' -Completed
+    Write-Progress -Activity 'Phat Gorrilla setup' -Completed
     Write-Host "Setup report: $reportPath" -ForegroundColor Green
     $report
 } catch {
@@ -233,7 +233,7 @@ try {
     $reportPath = Join-Path $reportDir ("Setup-Report-Failed-{0}.json" -f (Get-Date -Format 'yyyyMMdd-HHmmss'))
     $report.reportPath = $reportPath
     $report | ConvertTo-Json -Depth 12 | Set-Content -LiteralPath $reportPath -Encoding UTF8
-    Write-Progress -Activity 'Power Gorilla setup' -Completed
-    Write-Error "Power Gorilla setup failed safely. Report: $reportPath. Error: $($_.Exception.Message)"
+    Write-Progress -Activity 'Phat Gorrilla setup' -Completed
+    Write-Error "Phat Gorrilla setup failed safely. Report: $reportPath. Error: $($_.Exception.Message)"
     exit 1
 }

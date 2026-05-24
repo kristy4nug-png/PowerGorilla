@@ -1,10 +1,10 @@
 {
   "expo": {
-    "name": "Bad Gorrilla",
-    "slug": "bad-gorrilla",
+    "name": "Phat Gorrilla",
+    "slug": "phat-gorrilla",
     "version": "1.0.0",
     "orientation": "portrait",
-    "scheme": "badgorrilla",
+    "scheme": "phatgorrilla",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "dark",
     "splash": {

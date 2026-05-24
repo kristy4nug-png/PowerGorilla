@@ -1,4 +1,4 @@
-Powershell Gorrilla
+Phat Gorrilla
 
 Type:
 Launchers
@@ -16,4 +16,4 @@ Launch:
 C:\Program Files\PowerShell\7\pwsh.exe
 
 Original:
-C:\Users\Chris Nugent\Desktop\The Launch\Development\PowerShell Gorrilla.lnk
+Use the launcher created by scripts\Setup-PowerGorilla.ps1 -CreateDesktopIcon.

@@ -1,8 +1,8 @@
-# Bad Gorrilla
+# Phat Gorrilla
 
-<img src="docs/assets/bad-gorrilla-logo.png" alt="Bad Gorrilla logo" width="180">
+<img src="docs/assets/phat-gorrilla-logo.png" alt="Phat Gorrilla logo" width="180">
 
-Bad Gorrilla is a PowerShell-first, local-first Windows command centre for app inventory, workflow search, visual app-icon workflow building, sign-in status review, Ollama-backed JSON schema processing, and safe dry-run system care.
+Phat Gorrilla is a PowerShell-first, local-first Windows command centre for app inventory, workflow search, visual app-icon workflow building, sign-in status review, Ollama-backed JSON schema processing, and safe dry-run system care.
 
 ## Hard Rules
 
@@ -24,6 +24,10 @@ Bad Gorrilla is a PowerShell-first, local-first Windows command centre for app i
 - Strict Safe Mode with preview-only risky actions
 - Cost policy filtering that blocks known paid/trial/subscription items
 - Ollama extraction flow for large JSON schema enrichment before Supabase sync
+
+## Brand Assets
+
+The Phat Gorrilla logo, icon set, small dashboard image, Expo splash/favicon assets, desktop launcher icon, and GitHub/social preview pack live in `assets`, `frontend/assets`, `ui/assets`, and `docs/assets/brand`.
 
 ## Setup
 
@@ -53,7 +57,7 @@ http://127.0.0.1:8765/
 
 ## Desktop Launcher
 
-Create or repair the Bad Gorrilla desktop shortcut using the built-in launcher icon. The shortcut now launches Bad Gorrilla in a browser app window when supported, so it behaves like a standalone desktop app instead of a regular tabbed website.
+Create or repair the Phat Gorrilla desktop shortcut using the built-in launcher icon. The shortcut now launches Phat Gorrilla in a browser app window when supported, so it behaves like a standalone desktop app instead of a regular tabbed website.
 
 ```powershell
 cd .\PowerGorilla
